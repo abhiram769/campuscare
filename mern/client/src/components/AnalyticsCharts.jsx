@@ -45,7 +45,7 @@ export default function AnalyticsCharts({ mode = "requester", complaints = [], t
     return { statuses, categories, monthly };
   }, [mode, complaints, tasks, attendance]);
 
-  const noData = mode === "cleaner" ? tasks.length === 0 : complaints.length === 0;
+  const noData = mode === "cleaner" ? tasks.length === 0 && !attendance?.status : complaints.length === 0;
   return (
     <section className="analytics-section">
       <div className="analytics-section-heading"><div><span className="dashboard-eyebrow">YOUR INSIGHTS</span><h2>Dashboard analytics</h2><p>{mode === "cleaner" ? "A snapshot of your active workload and today's attendance." : "Explore your complaint activity, status and issue categories."}</p></div></div>
