@@ -19,6 +19,7 @@ app.use(helmet());
 app.use(cors({ origin: process.env.CLIENT_URL || "http://localhost:5173" }));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
+app.use("/uploads", express.static(require("path").join(__dirname, "uploads"), { maxAge: "7d", immutable: true }));
 app.use(morgan("dev"));
 
 app.get("/", (req, res) => res.json({ success: true, message: "Campus Care API" }));
