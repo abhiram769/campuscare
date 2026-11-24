@@ -1,16 +1,28 @@
 const Complaint = require("../models/Complaint");
+const fs = require("fs");
+const path = require("path");
+
 exports.createComplaint = async (req, res, next) => {
   try {
     const { title, description, category, location, latitude, longitude, images } = req.body;
-    if (!title || !description || !category || !location) return res.status(400).json({ success: false, message: "Title, description, category and campus location are required." });
+    if (!title || !description || !category || !location) {
+      (req.files || []).forEach((file) => fs.unlink(file.path, () => {}));
+      return res.status(400).json({ success: false, message: "Title, description, category and campus location are required." });
+    }
+    const serverBaseUrl = (process.env.SERVER_PUBLIC_URL || `${req.protocol}://${req.get("host")}`).replace(/\/$/, "");
+    const uploadedImages = (req.files || []).map((file) => `${serverBaseUrl}/uploads/complaints/${file.filename}`);
+    const legacyImages = Array.isArray(images) ? images.slice(0, Math.max(0, 5 - uploadedImages.length)) : [];
     const complaint = await Complaint.create({
       reporter: req.user._id, title, description, category, location,
       latitude: latitude == null || latitude === "" ? undefined : Number(latitude),
       longitude: longitude == null || longitude === "" ? undefined : Number(longitude),
-      images: Array.isArray(images) ? images.slice(0, 5) : []
+      images: [...uploadedImages, ...legacyImages]
     });
     res.status(201).json({ success: true, message: "Complaint submitted.", complaint });
-  } catch (error) { next(error); }
+  } catch (error) {
+    (req.files || []).forEach((file) => fs.unlink(file.path, () => {}));
+    next(error);
+  }
 };
 exports.getMyComplaints = async (req, res, next) => {
   try {
