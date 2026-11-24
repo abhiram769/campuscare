@@ -10,3 +10,5 @@ media/
 staticfiles/
 .vscode/
 .idea/
+# Local complaint image uploads (configure persistent cloud storage for deployment)
+mern/server/uploads/complaints/*
