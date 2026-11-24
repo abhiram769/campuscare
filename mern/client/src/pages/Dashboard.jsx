@@ -269,6 +269,42 @@ function AdminDashboard({ user, logout, navigate }) {
   );
 }
 
+
+function CleanerDashboard({ user, logout, navigate }) {
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState("");
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const loadTasks = useCallback(async () => {
+    setLoading(true); setError("");
+    try { const response = await api.get("/staff/tasks"); setTasks(response.data.tasks || []); }
+    catch (err) { setError(err.response?.data?.message || "Unable to load assigned tasks."); }
+    finally { setLoading(false); }
+  }, []);
+  useEffect(() => { loadTasks(); }, [loadTasks]);
+  const updateStatus = async (task, status) => {
+    setBusyId(task._id); setError(""); setNotice("");
+    try { const response = await api.patch(`/staff/tasks/${task._id}/status`, { status }); setNotice(response.data.message); await loadTasks(); }
+    catch (err) { setError(err.response?.data?.message || "Unable to update task."); }
+    finally { setBusyId(""); }
+  };
+  const nextStep = { ASSIGNED: ["ACCEPTED", "Accept task"], ACCEPTED: ["IN_PROGRESS", "Start work"], IN_PROGRESS: ["COMPLETED", "Mark completed"] };
+  return (
+    <main className="dashboard-page">
+      <header className="dashboard-topbar"><Link className="dashboard-brand" to="/"><span className="dashboard-brand-mark">C</span> Campus Care</Link><div className="dashboard-user"><span><strong>{user?.firstName} {user?.lastName || ""}</strong><small>Cleaning staff</small></span><button className="refresh-button" onClick={() => { logout(); navigate("/login"); }}>Log out</button></div></header>
+      <div className="dashboard-container">
+        <section className="dashboard-welcome"><div><span className="dashboard-eyebrow">CLEANING TEAM</span><h1>Your assigned tasks</h1><p>Accept your assigned campus work and update its progress.</p></div><span className="role-tag">CLEANER</span></section>
+        {error && <div className="dashboard-alert dashboard-alert-error" role="alert">{error}</div>}
+        {notice && <div className="dashboard-alert dashboard-alert-success" role="status">{notice}</div>}
+        <section className="dashboard-panel admin-queue-panel"><div className="panel-heading reports-heading"><div><span className="dashboard-eyebrow">MY WORK</span><h2>Active assignments</h2></div><button className="refresh-button" onClick={loadTasks} disabled={loading}>↻ Refresh</button></div>
+          {loading ? <div className="empty-state">Loading assigned tasks...</div> : tasks.length === 0 ? <div className="empty-state"><strong>No active tasks assigned</strong><p>New assignments from the administrator will appear here.</p></div> : <div className="admin-assign-list">{tasks.map((task) => <article className="admin-assign-row cleaner-task-row" key={task._id}><div><strong>{task.title}</strong><small>{task.category} · {task.location} · Reported by {task.reporter?.firstName || "Campus user"}</small><p>{task.description}</p><StatusPill status={task.status} />{task.images?.length > 0 && <div className="admin-image-grid">{task.images.map((src, index) => <a href={src} target="_blank" rel="noreferrer" key={src}><img src={src} alt={`Task attachment ${index + 1}`} /></a>)}</div>}</div>{nextStep[task.status] && <button className="dashboard-submit" disabled={busyId === task._id} onClick={() => updateStatus(task, nextStep[task.status][0])}>{nextStep[task.status][1]}</button>}</article>)}</div>}
+        </section>
+      </div>
+    </main>
+  );
+}
+
 function StaffDashboard({ user, logout, navigate }) {
   const isAdmin = user?.role === "ADMIN";
   return (
@@ -287,5 +323,6 @@ export default function Dashboard() {
   const navigate = useNavigate();
   if (user?.role === "STUDENT" || user?.role === "FACULTY") return <RequesterDashboard user={user} />;
   if (user?.role === "ADMIN") return <AdminDashboard user={user} logout={logout} navigate={navigate} />;
+  if (user?.role === "CLEANER") return <CleanerDashboard user={user} logout={logout} navigate={navigate} />;
   return <StaffDashboard user={user} logout={logout} navigate={navigate} />;
 }
