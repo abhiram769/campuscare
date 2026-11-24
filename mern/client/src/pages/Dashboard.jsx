@@ -310,6 +310,7 @@ function AdminDashboard({ user, logout, navigate }) {
 
 function CleanerDashboard({ user, logout, navigate }) {
   const [tasks, setTasks] = useState([]);
+  const [completedTasks, setCompletedTasks] = useState([]);
   const [attendance, setAttendance] = useState(null);
   const [isWorkingDay, setIsWorkingDay] = useState(true);
   const [evidenceFiles, setEvidenceFiles] = useState({});
@@ -322,11 +323,13 @@ function CleanerDashboard({ user, logout, navigate }) {
   const loadTasks = useCallback(async () => {
     setLoading(true); setError("");
     try {
-      const [taskResponse, attendanceResponse] = await Promise.all([
+      const [taskResponse, completedResponse, attendanceResponse] = await Promise.all([
         api.get("/staff/tasks"),
+        api.get("/staff/tasks/completed"),
         api.get("/staff/attendance/today")
       ]);
       setTasks(taskResponse.data.tasks || []);
+      setCompletedTasks(completedResponse.data.tasks || []);
       setAttendance(attendanceResponse.data.attendance || null);
       setIsWorkingDay(attendanceResponse.data.isWorkingDay);
     } catch (err) { setError(err.response?.data?.message || "Unable to load cleaner dashboard."); }
@@ -387,6 +390,26 @@ function CleanerDashboard({ user, logout, navigate }) {
           {loading ? <div className="empty-state">Loading assigned tasks...</div> : tasks.length === 0 ? <div className="empty-state"><strong>No active tasks assigned</strong><p>New assignments from the administrator will appear here.</p></div> : <div className="admin-assign-list">{tasks.map((task) => <article className="admin-assign-row cleaner-task-row" key={task._id}><div><strong>{task.title}</strong><small>{task.category} · {task.location} · Reported by {task.reporter?.firstName || "Campus user"}</small><p>{task.description}</p><StatusPill status={task.status} />{task.images?.length > 0 && <div className="admin-image-grid">{task.images.map((src, index) => <a href={src} target="_blank" rel="noreferrer" key={src}><img src={src} alt={`Task attachment ${index + 1}`} /></a>)}</div>}
             {task.status === "IN_PROGRESS" && <div className="task-evidence-upload"><label>Upload completion evidence (required) <span>1–5 photos · JPG, PNG or WEBP · 5 MB each</span><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => { const chosen = Array.from(event.target.files || []); if (chosen.length > 5 || chosen.some((file) => file.size > 5 * 1024 * 1024) || chosen.some((file) => !["image/jpeg", "image/png", "image/webp"].includes(file.type))) { setError("Choose up to 5 JPG, PNG or WEBP photos, each no larger than 5 MB."); event.target.value = ""; return; } setError(""); setEvidenceFiles((current) => ({ ...current, [task._id]: chosen })); }} /></label>{(evidenceFiles[task._id] || []).length > 0 && <small>{evidenceFiles[task._id].length} evidence photo(s) selected</small>}<button type="button" className="dashboard-submit" disabled={busyId === task._id} onClick={() => completeWithEvidence(task)}>{busyId === task._id ? "Uploading evidence..." : "Upload evidence & complete task"}</button></div>}
           </div>{nextStep[task.status] && <button className="dashboard-submit" disabled={busyId === task._id} onClick={() => updateStatus(task, nextStep[task.status][0])}>{nextStep[task.status][1]}</button>}</article>)}</div>}
+        </section>
+        <section className="dashboard-panel cleaner-history-panel">
+          <div className="panel-heading reports-heading">
+            <div><span className="dashboard-eyebrow">WORK HISTORY</span><h2>Tasks you completed</h2><p>Review your finished work and the evidence photos you submitted.</p></div>
+            <span className="role-tag">{completedTasks.length} completed</span>
+          </div>
+          {loading ? <div className="empty-state">Loading completed tasks...</div> : completedTasks.length === 0 ? (
+            <div className="empty-state"><strong>No completed tasks yet</strong><p>Tasks you finish with evidence will be saved here for future reference.</p></div>
+          ) : <div className="admin-assign-list">{completedTasks.map((task) => (
+            <article className="admin-assign-row cleaner-completed-task" key={task._id}>
+              <div className="cleaner-completed-task-main">
+                <div className="complaint-item-top"><span className="complaint-category">{String(task.category || "").replaceAll("_", " ")}</span><StatusPill status={task.status} /></div>
+                <strong>{task.title}</strong>
+                <small>{task.location} · Completed {task.resolvedAt ? new Date(task.resolvedAt).toLocaleString() : new Date(task.updatedAt).toLocaleString()}</small>
+                <p>{task.description}</p>
+                <small>Reported by {task.reporter?.firstName || "Campus user"} {task.reporter?.lastName || ""}</small>
+                {task.completionEvidence?.length > 0 ? <div className="admin-image-grid completion-evidence-grid">{task.completionEvidence.map((src, index) => <a href={src} target="_blank" rel="noreferrer" key={src}><img src={src} alt={"Your completion evidence " + (index + 1)} loading="lazy" /></a>)}</div> : <small className="muted-note">No completion photos were saved for this task.</small>}
+              </div>
+            </article>
+          ))}</div>}
         </section>
       </div>
     </main>
