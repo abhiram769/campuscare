@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
+import CampusMap from "../components/CampusMap";
 
 const emptyForm = { title: "", description: "", category: "CLEANLINESS", location: "", latitude: "", longitude: "" };
 const statusLabels = {
@@ -93,6 +94,12 @@ function RequesterDashboard({ user }) {
           <article className="stat-card"><span className="stat-icon stat-done">✓</span><div><small>Resolved</small><strong>{stats.completed}</strong></div></article>
         </section>
 
+        <section className="dashboard-panel campus-overview-panel">
+          <div className="panel-heading"><div><span className="dashboard-eyebrow">CAMPUS OVERVIEW</span><h2>3D complaint location map</h2><p>Explore the campus and view GPS locations attached to your reports. Zoom, rotate and tilt the map.</p></div></div>
+          <CampusMap complaints={complaints} />
+          <p className="map-footnote">Only complaints with saved GPS coordinates appear as markers. Building detail depends on available OpenStreetMap data.</p>
+        </section>
+
         <div className="dashboard-content-grid">
           <section className="dashboard-panel">
             <div className="panel-heading"><div><span className="dashboard-eyebrow">NEW REQUEST</span><h2>Report a campus issue</h2><p>Share the details so the campus team can take action.</p></div></div>
@@ -103,7 +110,9 @@ function RequesterDashboard({ user }) {
               <label>Category<select name="category" value={form.category} onChange={updateField}><option value="CLEANLINESS">Cleanliness</option><option value="GARBAGE">Garbage</option><option value="PLUMBING">Plumbing</option><option value="ELECTRICAL">Electrical</option><option value="MAINTENANCE">Maintenance</option><option value="OTHER">Other</option></select></label>
               <label>Campus location<input name="location" value={form.location} onChange={updateField} placeholder="Building, block or nearby landmark" required /></label>
               <div className="location-row"><span>GPS coordinates are optional.</span><button type="button" className="text-button" onClick={useCurrentLocation}>◎ Use my location</button></div>
-              <div className="coordinate-grid"><label>Latitude<input name="latitude" value={form.latitude} onChange={updateField} inputMode="decimal" placeholder="Optional" /></label><label>Longitude<input name="longitude" value={form.longitude} onChange={updateField} inputMode="decimal" placeholder="Optional" /></label></div>
+              <div className="location-map-heading"><strong>Pin the exact location</strong><span>Click anywhere on the map to select a point.</span></div>
+              <CampusMap compact interactive selectedLocation={form.latitude && form.longitude ? { latitude: form.latitude, longitude: form.longitude } : null} onLocationSelect={({ latitude, longitude }) => setForm((current) => ({ ...current, latitude, longitude, location: current.location || "Selected on campus map" }))} />
+              <div className="coordinate-grid"><label>Latitude<input name="latitude" value={form.latitude} onChange={updateField} inputMode="decimal" placeholder="Selected from map" /></label><label>Longitude<input name="longitude" value={form.longitude} onChange={updateField} inputMode="decimal" placeholder="Selected from map" /></label></div>
               <label>Description<textarea name="description" value={form.description} onChange={updateField} rows="4" maxLength="3000" placeholder="Describe what happened and where..." required /></label>
               <button className="dashboard-submit" type="submit" disabled={submitting}>{submitting ? "Submitting..." : "Submit complaint →"}</button>
             </form>
