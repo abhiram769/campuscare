@@ -7,6 +7,8 @@ const morgan = require("morgan");
 
 const connectDB = require("./config/db");
 const healthRoutes = require("./routes/health.routes");
+const authRoutes = require("./routes/auth.routes");
+const complaintRoutes = require("./routes/complaint.routes");
 const { notFound, errorHandler } = require("./middleware/error.middleware");
 
 const app = express();
@@ -22,6 +24,8 @@ app.get("/", (req, res) => {
   res.json({ success: true, message: "Campus Care API" });
 });
 app.use("/api/health", healthRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/complaints", complaintRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
