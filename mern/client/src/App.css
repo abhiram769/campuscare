@@ -190,3 +190,14 @@
 .maplibregl-ctrl-group { border-radius: 8px !important; overflow: hidden; }
 .maplibregl-popup-content { max-width: 240px; border-radius: 9px; color: var(--dark); font: 12px/1.5 inherit; }
 @media (max-width: 600px) { .campus-map-frame { min-height: 300px; } .campus-map-compact { min-height: 230px; } }
+
+/* Complaint photo upload and previews */
+.image-upload-label { gap: 7px !important; }
+.image-upload-label > span { color: var(--muted); font-size: 10px; font-weight: 400; }
+.complaint-form .image-file-input { min-height: auto; padding: 10px; border: 1px dashed #b9d2c0; background: #f8fbf9; cursor: pointer; }
+.image-preview-grid, .complaint-image-strip { display: flex; flex-wrap: wrap; gap: 9px; margin: 2px 0 5px; }
+.image-preview-item { position: relative; width: 76px; height: 76px; }
+.image-preview-item img, .complaint-image-strip img { width: 76px; height: 76px; border: 1px solid #e1eae4; border-radius: 8px; object-fit: cover; }
+.image-preview-item button { position: absolute; top: -7px; right: -7px; display: grid; place-items: center; width: 23px; height: 23px; padding: 0; border: 2px solid white; border-radius: 50%; color: white; background: #9d3838; font-size: 17px; line-height: 1; cursor: pointer; }
+.complaint-image-strip { margin: 9px 0; }
+.complaint-image-strip a { display: block; }
