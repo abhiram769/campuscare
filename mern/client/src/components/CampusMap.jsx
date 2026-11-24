@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import maplibregl, { setWorkerUrl } from "maplibre-gl";
-import mapWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
-setWorkerUrl(mapWorkerUrl);
+import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 const CAMPUS_CENTER = [75.9344, 11.3217];
