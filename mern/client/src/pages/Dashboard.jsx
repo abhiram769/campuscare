@@ -18,6 +18,8 @@ function RequesterDashboard({ user }) {
   const [stats, setStats] = useState({ total: 0, open: 0, completed: 0 });
   const [complaints, setComplaints] = useState([]);
   const [form, setForm] = useState(emptyForm);
+  const [imageFiles, setImageFiles] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -42,6 +44,12 @@ function RequesterDashboard({ user }) {
 
   useEffect(() => { loadDashboard(); }, [loadDashboard]);
 
+  useEffect(() => {
+    const previews = imageFiles.map((file) => URL.createObjectURL(file));
+    setImagePreviews(previews);
+    return () => previews.forEach((url) => URL.revokeObjectURL(url));
+  }, [imageFiles]);
+
   const updateField = (event) => setForm((current) => ({ ...current, [event.target.name]: event.target.value }));
 
   const useCurrentLocation = () => {
@@ -55,18 +63,27 @@ function RequesterDashboard({ user }) {
     );
   };
 
+  const chooseImages = (event) => {
+    const chosen = Array.from(event.target.files || []);
+    if (chosen.length > 5) { setError("Please select no more than 5 images."); event.target.value = ""; return; }
+    if (chosen.some((file) => file.size > 5 * 1024 * 1024)) { setError("Each image must be 5 MB or smaller."); event.target.value = ""; return; }
+    if (chosen.some((file) => !["image/jpeg", "image/png", "image/webp"].includes(file.type))) { setError("Only JPG, PNG and WEBP images are supported."); event.target.value = ""; return; }
+    setError(""); setImageFiles(chosen);
+  };
+
   const submitComplaint = async (event) => {
     event.preventDefault();
     setSubmitting(true);
     setError("");
     setNotice("");
     try {
-      await api.post("/complaints", {
-        ...form,
-        latitude: form.latitude || undefined,
-        longitude: form.longitude || undefined
-      });
+      const payload = new FormData();
+      Object.entries(form).forEach(([key, value]) => { if (value !== "") payload.append(key, value); });
+      imageFiles.forEach((file) => payload.append("images", file));
+      await api.post("/complaints", payload, { headers: { "Content-Type": "multipart/form-data" } });
       setForm(emptyForm);
+      setImageFiles([]);
+      setImagePreviews([]);
       setNotice("Your complaint has been submitted successfully.");
       await loadDashboard();
     } catch (err) {
@@ -114,13 +131,17 @@ function RequesterDashboard({ user }) {
               <CampusMap compact interactive selectedLocation={form.latitude && form.longitude ? { latitude: form.latitude, longitude: form.longitude } : null} onLocationSelect={({ latitude, longitude }) => setForm((current) => ({ ...current, latitude, longitude, location: current.location || "Selected on campus map" }))} />
               <div className="coordinate-grid"><label>Latitude<input name="latitude" value={form.latitude} onChange={updateField} inputMode="decimal" placeholder="Selected from map" /></label><label>Longitude<input name="longitude" value={form.longitude} onChange={updateField} inputMode="decimal" placeholder="Selected from map" /></label></div>
               <label>Description<textarea name="description" value={form.description} onChange={updateField} rows="4" maxLength="3000" placeholder="Describe what happened and where..." required /></label>
+              <label className="image-upload-label">Add complaint photos <span>Up to 5 images · JPG, PNG or WEBP · 5 MB each</span>
+                <input className="image-file-input" type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={chooseImages} />
+              </label>
+              {imagePreviews.length > 0 && <div className="image-preview-grid">{imagePreviews.map((src, index) => <div className="image-preview-item" key={src}><img src={src} alt={imageFiles[index]?.name || "Complaint preview"} /><button type="button" aria-label="Remove image" onClick={() => setImageFiles((current) => current.filter((_, itemIndex) => itemIndex !== index))}>×</button></div>)}</div>}
               <button className="dashboard-submit" type="submit" disabled={submitting}>{submitting ? "Submitting..." : "Submit complaint →"}</button>
             </form>
           </section>
 
           <section className="dashboard-panel reports-panel">
             <div className="panel-heading reports-heading"><div><span className="dashboard-eyebrow">YOUR ACTIVITY</span><h2>Recent complaints</h2><p>Track the latest updates to your reports.</p></div><button type="button" className="refresh-button" onClick={loadDashboard} disabled={loading}>↻ Refresh</button></div>
-            {loading ? <div className="empty-state">Loading your complaints...</div> : complaints.length === 0 ? <div className="empty-state"><span className="empty-icon">▤</span><strong>No complaints yet</strong><p>When you submit a campus issue, it will appear here.</p></div> : <div className="complaint-list">{complaints.map((item) => <article className="complaint-item" key={item._id}><div className="complaint-item-top"><span className="complaint-category">{String(item.category || "").replaceAll("_", " ")}</span><StatusPill status={item.status} /></div><h3>{item.title}</h3><p>{item.location}</p><small>{new Date(item.createdAt).toLocaleString()}</small></article>)}</div>}
+            {loading ? <div className="empty-state">Loading your complaints...</div> : complaints.length === 0 ? <div className="empty-state"><span className="empty-icon">▤</span><strong>No complaints yet</strong><p>When you submit a campus issue, it will appear here.</p></div> : <div className="complaint-list">{complaints.map((item) => <article className="complaint-item" key={item._id}><div className="complaint-item-top"><span className="complaint-category">{String(item.category || "").replaceAll("_", " ")}</span><StatusPill status={item.status} /></div><h3>{item.title}</h3><p>{item.location}</p>{Array.isArray(item.images) && item.images.length > 0 && <div className="complaint-image-strip">{item.images.map((src, index) => <a href={src} target="_blank" rel="noreferrer" key={src}><img src={src} alt={"Complaint attachment " + (index + 1)} loading="lazy" /></a>)}</div>}<small>{new Date(item.createdAt).toLocaleString()}</small></article>)}</div>}
           </section>
         </div>
         <footer className="dashboard-footer">Campus Care · A cleaner, safer campus starts with you.</footer>
