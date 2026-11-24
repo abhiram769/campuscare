@@ -201,3 +201,12 @@
 .image-preview-item button { position: absolute; top: -7px; right: -7px; display: grid; place-items: center; width: 23px; height: 23px; padding: 0; border: 2px solid white; border-radius: 50%; color: white; background: #9d3838; font-size: 17px; line-height: 1; cursor: pointer; }
 .complaint-image-strip { margin: 9px 0; }
 .complaint-image-strip a { display: block; }
+/* Possible duplicate complaint warning */
+.duplicate-warning { padding: 13px; border: 1px solid #ead39d; border-radius: 9px; color: #674c19; background: #fff9eb; }
+.duplicate-warning > strong { display: block; font-size: 13px; }
+.duplicate-warning > p { margin: 6px 0 10px; font-size: 11px; line-height: 1.55; }
+.duplicate-match { padding: 9px 0; border-top: 1px solid #f0e2c2; }
+.duplicate-match b, .duplicate-match small { display: block; }
+.duplicate-match b { font-size: 12px; }
+.duplicate-match small { margin-top: 4px; color: #806a3e; font-size: 10px; }
+.duplicate-cancel { margin-top: 8px; padding: 7px 10px; border: 1px solid #c6a96a; border-radius: 7px; color: #674c19; background: white; font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; }
