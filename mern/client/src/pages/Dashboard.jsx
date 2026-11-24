@@ -303,33 +303,82 @@ function AdminDashboard({ user, logout, navigate }) {
 
 function CleanerDashboard({ user, logout, navigate }) {
   const [tasks, setTasks] = useState([]);
+  const [attendance, setAttendance] = useState(null);
+  const [isWorkingDay, setIsWorkingDay] = useState(true);
+  const [evidenceFiles, setEvidenceFiles] = useState({});
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState("");
+  const [attendanceBusy, setAttendanceBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+
   const loadTasks = useCallback(async () => {
     setLoading(true); setError("");
-    try { const response = await api.get("/staff/tasks"); setTasks(response.data.tasks || []); }
-    catch (err) { setError(err.response?.data?.message || "Unable to load assigned tasks."); }
+    try {
+      const [taskResponse, attendanceResponse] = await Promise.all([
+        api.get("/staff/tasks"),
+        api.get("/staff/attendance/today")
+      ]);
+      setTasks(taskResponse.data.tasks || []);
+      setAttendance(attendanceResponse.data.attendance || null);
+      setIsWorkingDay(attendanceResponse.data.isWorkingDay);
+    } catch (err) { setError(err.response?.data?.message || "Unable to load cleaner dashboard."); }
     finally { setLoading(false); }
   }, []);
   useEffect(() => { loadTasks(); }, [loadTasks]);
+
   const updateStatus = async (task, status) => {
     setBusyId(task._id); setError(""); setNotice("");
-    try { const response = await api.patch(`/staff/tasks/${task._id}/status`, { status }); setNotice(response.data.message); await loadTasks(); }
-    catch (err) { setError(err.response?.data?.message || "Unable to update task."); }
+    try {
+      const response = await api.patch(`/staff/tasks/${task._id}/status`, { status });
+      setNotice(response.data.message); await loadTasks();
+    } catch (err) { setError(err.response?.data?.message || "Unable to update task."); }
     finally { setBusyId(""); }
   };
-  const nextStep = { ASSIGNED: ["ACCEPTED", "Accept task"], ACCEPTED: ["IN_PROGRESS", "Start work"], IN_PROGRESS: ["COMPLETED", "Mark completed"] };
+
+  const markAttendance = async (action) => {
+    setAttendanceBusy(true); setError(""); setNotice("");
+    try {
+      const response = await api.post(`/staff/attendance/${action}`);
+      setAttendance(response.data.attendance); setNotice(response.data.message);
+    } catch (err) { setError(err.response?.data?.message || "Unable to update attendance."); }
+    finally { setAttendanceBusy(false); }
+  };
+
+  const completeWithEvidence = async (task) => {
+    const selected = evidenceFiles[task._id] || [];
+    if (!selected.length) { setError("Upload at least one photo showing the completed work."); return; }
+    const payload = new FormData();
+    selected.forEach((file) => payload.append("evidence", file));
+    setBusyId(task._id); setError(""); setNotice("");
+    try {
+      const response = await api.post(`/staff/tasks/${task._id}/complete`, payload, { headers: { "Content-Type": "multipart/form-data" } });
+      setNotice(response.data.message);
+      setEvidenceFiles((current) => { const next = { ...current }; delete next[task._id]; return next; });
+      await loadTasks();
+    } catch (err) { setError(err.response?.data?.message || "Unable to submit completion evidence."); }
+    finally { setBusyId(""); }
+  };
+
+  const nextStep = { ASSIGNED: ["ACCEPTED", "Accept task"], ACCEPTED: ["IN_PROGRESS", "Start work"] };
   return (
     <main className="dashboard-page">
       <header className="dashboard-topbar"><Link className="dashboard-brand" to="/"><span className="dashboard-brand-mark">C</span> Campus Care</Link><div className="dashboard-user"><span><strong>{user?.firstName} {user?.lastName || ""}</strong><small>Cleaning staff</small></span><button className="refresh-button" onClick={() => { logout(); navigate("/login"); }}>Log out</button></div></header>
       <div className="dashboard-container">
-        <section className="dashboard-welcome"><div><span className="dashboard-eyebrow">CLEANING TEAM</span><h1>Your assigned tasks</h1><p>Accept your assigned campus work and update its progress.</p></div><span className="role-tag">CLEANER</span></section>
+        <section className="dashboard-welcome"><div><span className="dashboard-eyebrow">CLEANING TEAM</span><h1>Your assigned tasks</h1><p>Duty hours: 8:00 AM–5:00 PM · Monday–Saturday · No grace period.</p></div><span className="role-tag">CLEANER</span></section>
         {error && <div className="dashboard-alert dashboard-alert-error" role="alert">{error}</div>}
         {notice && <div className="dashboard-alert dashboard-alert-success" role="status">{notice}</div>}
+        <section className="dashboard-panel attendance-panel">
+          <div className="panel-heading"><div><span className="dashboard-eyebrow">DAILY ATTENDANCE</span><h2>Check in and check out</h2><p>Check in by 8:00 AM to be marked present. Any later check-in is marked late.</p></div></div>
+          {!isWorkingDay ? <div className="empty-state"><strong>Today is a non-working day</strong><p>Attendance is scheduled Monday through Saturday.</p></div> : <>
+            <div className="attendance-summary"><span><strong>Duty</strong> 8:00 AM – 5:00 PM</span><span><strong>Status</strong> {attendance?.status || "Not checked in"}</span><span><strong>Check-in</strong> {attendance?.checkIn ? new Date(attendance.checkIn).toLocaleTimeString() : "—"}</span><span><strong>Check-out</strong> {attendance?.checkOut ? new Date(attendance.checkOut).toLocaleTimeString() : "—"}</span></div>
+            <div className="admin-action-row"><button type="button" className="dashboard-submit attendance-action" disabled={attendanceBusy || Boolean(attendance?.checkIn)} onClick={() => markAttendance("check-in")}>Check in</button><button type="button" className="admin-secondary-action" disabled={attendanceBusy || !attendance?.checkIn || Boolean(attendance?.checkOut)} onClick={() => markAttendance("check-out")}>Check out</button></div>
+          </>}
+        </section>
         <section className="dashboard-panel admin-queue-panel"><div className="panel-heading reports-heading"><div><span className="dashboard-eyebrow">MY WORK</span><h2>Active assignments</h2></div><button className="refresh-button" onClick={loadTasks} disabled={loading}>↻ Refresh</button></div>
-          {loading ? <div className="empty-state">Loading assigned tasks...</div> : tasks.length === 0 ? <div className="empty-state"><strong>No active tasks assigned</strong><p>New assignments from the administrator will appear here.</p></div> : <div className="admin-assign-list">{tasks.map((task) => <article className="admin-assign-row cleaner-task-row" key={task._id}><div><strong>{task.title}</strong><small>{task.category} · {task.location} · Reported by {task.reporter?.firstName || "Campus user"}</small><p>{task.description}</p><StatusPill status={task.status} />{task.images?.length > 0 && <div className="admin-image-grid">{task.images.map((src, index) => <a href={src} target="_blank" rel="noreferrer" key={src}><img src={src} alt={`Task attachment ${index + 1}`} /></a>)}</div>}</div>{nextStep[task.status] && <button className="dashboard-submit" disabled={busyId === task._id} onClick={() => updateStatus(task, nextStep[task.status][0])}>{nextStep[task.status][1]}</button>}</article>)}</div>}
+          {loading ? <div className="empty-state">Loading assigned tasks...</div> : tasks.length === 0 ? <div className="empty-state"><strong>No active tasks assigned</strong><p>New assignments from the administrator will appear here.</p></div> : <div className="admin-assign-list">{tasks.map((task) => <article className="admin-assign-row cleaner-task-row" key={task._id}><div><strong>{task.title}</strong><small>{task.category} · {task.location} · Reported by {task.reporter?.firstName || "Campus user"}</small><p>{task.description}</p><StatusPill status={task.status} />{task.images?.length > 0 && <div className="admin-image-grid">{task.images.map((src, index) => <a href={src} target="_blank" rel="noreferrer" key={src}><img src={src} alt={`Task attachment ${index + 1}`} /></a>)}</div>}
+            {task.status === "IN_PROGRESS" && <div className="task-evidence-upload"><label>Upload completion evidence (required) <span>1–5 photos · JPG, PNG or WEBP · 5 MB each</span><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => { const chosen = Array.from(event.target.files || []); if (chosen.length > 5 || chosen.some((file) => file.size > 5 * 1024 * 1024) || chosen.some((file) => !["image/jpeg", "image/png", "image/webp"].includes(file.type))) { setError("Choose up to 5 JPG, PNG or WEBP photos, each no larger than 5 MB."); event.target.value = ""; return; } setError(""); setEvidenceFiles((current) => ({ ...current, [task._id]: chosen })); }} /></label>{(evidenceFiles[task._id] || []).length > 0 && <small>{evidenceFiles[task._id].length} evidence photo(s) selected</small>}<button type="button" className="dashboard-submit" disabled={busyId === task._id} onClick={() => completeWithEvidence(task)}>{busyId === task._id ? "Uploading evidence..." : "Upload evidence & complete task"}</button></div>}
+          </div>{nextStep[task.status] && <button className="dashboard-submit" disabled={busyId === task._id} onClick={() => updateStatus(task, nextStep[task.status][0])}>{nextStep[task.status][1]}</button>}</article>)}</div>}
         </section>
       </div>
     </main>
