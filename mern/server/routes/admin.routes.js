@@ -5,6 +5,10 @@ const {
   createUser,
   getAllUsers,
   updateUserStatus,
+  getComplaintsForAdmin,
+  getActiveCleaners,
+  reviewDuplicate,
+  assignComplaint,
 } = require("../controllers/admin.controller");
 
 const {
@@ -16,6 +20,12 @@ const router = express.Router();
 
 // All routes require an authenticated Admin
 router.use(protect, authorize("ADMIN"));
+
+// Complaint review and assignment
+router.get("/complaints", getComplaintsForAdmin);
+router.get("/cleaners", getActiveCleaners);
+router.patch("/complaints/:id/duplicate-review", reviewDuplicate);
+router.patch("/complaints/:id/assign", assignComplaint);
 
 // Create Cleaner or additional Admin
 router.post("/users", createUser);
