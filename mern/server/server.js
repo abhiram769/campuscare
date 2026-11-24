@@ -10,6 +10,7 @@ const healthRoutes = require("./routes/health.routes");
 const authRoutes = require("./routes/auth.routes");
 const complaintRoutes = require("./routes/complaint.routes");
 const adminRoutes = require("./routes/admin.routes");
+const staffRoutes = require("./routes/staff.routes");
 const { notFound, errorHandler } = require("./middleware/error.middleware");
 
 const app = express();
@@ -27,6 +28,7 @@ app.use("/api/health", healthRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/complaints", complaintRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/staff", staffRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
