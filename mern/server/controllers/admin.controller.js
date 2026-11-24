@@ -1,6 +1,7 @@
 
 const mongoose = require("mongoose");
 const User = require("../models/User");
+const Complaint = require("../models/Complaint");
 
 // Remove password from API responses
 const formatUser = (user) => ({
@@ -216,8 +217,101 @@ const updateUserStatus = async (req, res) => {
   }
 };
 
+
+
+// ADMIN REVIEWS ALL COMPLAINTS, WITH SUSPECTED DUPLICATES FIRST
+const getComplaintsForAdmin = async (req, res) => {
+  try {
+    const complaints = await Complaint.find({})
+      .populate("reporter", "firstName lastName username role")
+      .populate("assignedTo", "firstName lastName username")
+      .populate("suspectedDuplicates", "title location status images createdAt")
+      .sort({ duplicateReview: -1, createdAt: -1 });
+    return res.status(200).json({ success: true, count: complaints.length, complaints });
+  } catch (error) {
+    console.error("Admin complaint list error:", error);
+    return res.status(500).json({ success: false, message: "Unable to retrieve complaints." });
+  }
+};
+
+const getActiveCleaners = async (req, res) => {
+  try {
+    const cleaners = await User.find({ role: "CLEANER", isActive: true })
+      .select("firstName lastName username department")
+      .sort({ firstName: 1 });
+    return res.status(200).json({ success: true, cleaners });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Unable to retrieve cleaners." });
+  }
+};
+
+const reviewDuplicate = async (req, res) => {
+  try {
+    const { decision } = req.body;
+    if (!["CONFIRMED", "REJECTED"].includes(decision)) {
+      return res.status(400).json({ success: false, message: "Decision must be CONFIRMED or REJECTED." });
+    }
+    const complaint = await Complaint.findById(req.params.id);
+    if (!complaint) return res.status(404).json({ success: false, message: "Complaint not found." });
+    if (complaint.duplicateReview !== "PENDING") {
+      return res.status(409).json({ success: false, message: "This complaint has no pending duplicate review." });
+    }
+    complaint.duplicateReview = decision;
+    complaint.duplicateReviewedBy = req.user._id;
+    complaint.duplicateReviewedAt = new Date();
+    if (decision === "CONFIRMED") {
+      complaint.status = "DUPLICATE";
+      complaint.assignedTo = null;
+    } else {
+      complaint.status = "UNDER_REVIEW";
+    }
+    await complaint.save();
+    return res.status(200).json({
+      success: true,
+      message: decision === "CONFIRMED" ? "Duplicate confirmed. This report will not be assigned." : "Duplicate warning rejected. The complaint can now be assigned.",
+      complaint
+    });
+  } catch (error) {
+    console.error("Duplicate review error:", error);
+    return res.status(500).json({ success: false, message: "Unable to review duplicate report." });
+  }
+};
+
+const assignComplaint = async (req, res) => {
+  try {
+    const { cleanerId } = req.body;
+    if (!mongoose.isValidObjectId(req.params.id) || !mongoose.isValidObjectId(cleanerId)) {
+      return res.status(400).json({ success: false, message: "Invalid complaint or cleaner ID." });
+    }
+    const [complaint, cleaner] = await Promise.all([
+      Complaint.findById(req.params.id),
+      User.findOne({ _id: cleanerId, role: "CLEANER", isActive: true })
+    ]);
+    if (!complaint) return res.status(404).json({ success: false, message: "Complaint not found." });
+    if (!cleaner) return res.status(404).json({ success: false, message: "Active cleaner not found." });
+    if (complaint.status === "DUPLICATE" || complaint.duplicateReview === "PENDING" || complaint.duplicateReview === "CONFIRMED") {
+      return res.status(409).json({ success: false, message: "Review the duplicate warning before assigning this complaint." });
+    }
+    if (complaint.status === "COMPLETED") {
+      return res.status(409).json({ success: false, message: "Completed complaints cannot be reassigned." });
+    }
+    complaint.assignedTo = cleaner._id;
+    complaint.status = "ASSIGNED";
+    await complaint.save();
+    await complaint.populate("assignedTo", "firstName lastName username");
+    return res.status(200).json({ success: true, message: "Complaint assigned to cleaner.", complaint });
+  } catch (error) {
+    console.error("Assign complaint error:", error);
+    return res.status(500).json({ success: false, message: "Unable to assign complaint." });
+  }
+};
+
 module.exports = {
   createUser,
   getAllUsers,
   updateUserStatus,
+  getComplaintsForAdmin,
+  getActiveCleaners,
+  reviewDuplicate,
+  assignComplaint,
 };
