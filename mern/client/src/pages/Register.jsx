@@ -34,8 +34,8 @@ const Register = () => {
     setLoading(true);
 
     try {
-      await register(form);
-      navigate("/student/dashboard");
+      const user = await register(form);
+      navigate(user.role === "FACULTY" ? "/faculty/dashboard" : "/student/dashboard");
     } catch (err) {
       setError(
         err.response?.data?.message ||
