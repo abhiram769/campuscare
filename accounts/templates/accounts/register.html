@@ -1,0 +1,297 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Campus Care | Registration</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+          rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #16845b;
+            --primary-dark: #106644;
+            --dark: #17352a;
+            --muted: #718078;
+        }
+
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #f3f7f4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 35px 15px;
+        }
+
+        .register-card {
+            width: 100%;
+            max-width: 590px;
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 38px 45px;
+            box-shadow: 0 18px 55px rgba(25, 65, 45, 0.09);
+        }
+
+        .brand {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 11px;
+            color: var(--dark);
+            font-size: 25px;
+            font-weight: 800;
+            margin-bottom: 25px;
+        }
+
+        .brand-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 13px;
+            background: #e8f6ee;
+            color: var(--primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 23px;
+        }
+
+        .heading {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .heading h2 {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 8px;
+        }
+
+        .heading p {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 15px;
+        }
+
+        .role-badge {
+            display: inline-block;
+            background: #e9f6ef;
+            color: var(--primary-dark);
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        /* Django form styling */
+
+        form p {
+            margin-bottom: 18px;
+        }
+
+        form p label {
+            display: block;
+            color: #344b3f;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        form p input,
+        form p select,
+        form p textarea {
+            display: block;
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #dce7df;
+            border-radius: 9px;
+            background: #fbfdfb;
+            color: #344b3f;
+            font-size: 14px;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        form p input:focus,
+        form p select:focus,
+        form p textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(22,132,91,0.10);
+            background: #ffffff;
+        }
+
+        form p input[type="checkbox"] {
+            display: inline-block;
+            width: auto;
+            margin-right: 7px;
+        }
+
+        form p input[type="checkbox"] + label {
+            display: inline;
+        }
+
+        form ul {
+            padding-left: 20px;
+            color: #77847c;
+            font-size: 11px;
+            margin-top: 7px;
+        }
+
+        .helptext {
+            display: block;
+            color: #8a9990;
+            font-size: 11px;
+            margin-top: 6px;
+        }
+
+        .errorlist {
+            color: #dc3545;
+            font-size: 12px;
+            padding-left: 18px;
+            margin-top: 7px;
+        }
+
+        .register-btn {
+            width: 100%;
+            border: none;
+            background: var(--primary);
+            color: white;
+            border-radius: 10px;
+            padding: 14px;
+            font-size: 15px;
+            font-weight: 700;
+            margin-top: 10px;
+            transition: 0.2s;
+        }
+
+        .register-btn:hover {
+            background: var(--primary-dark);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 7px 18px rgba(22,132,91,0.2);
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #edf1ee;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .login-link a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .login-link a:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        .footer-note {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 11px;
+            color: #9aa69f;
+        }
+
+        @media (max-width: 576px) {
+            .register-card {
+                padding: 30px 23px;
+            }
+
+            .heading h2 {
+                font-size: 23px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="register-card">
+
+    <!-- Brand -->
+    <div class="brand">
+        <div class="brand-icon">
+            <i class="bi bi-leaf-fill"></i>
+        </div>
+        Campus Care
+    </div>
+
+    <!-- Heading -->
+    <div class="heading">
+        <h2>Create Your Account</h2>
+
+        <p>
+            Join Campus Care and help us maintain a cleaner,
+            healthier and more sustainable campus.
+        </p>
+
+        <span class="role-badge">
+            <i class="bi bi-person-badge me-1"></i>
+            {{ role }} Registration
+        </span>
+    </div>
+
+    <!-- Django messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-info alert-dismissible fade show"
+                 role="alert">
+                {{ message }}
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert">
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Registration form -->
+    <form method="POST">
+        {% csrf_token %}
+
+        {{ form.as_p }}
+
+        <button type="submit" class="register-btn">
+            <i class="bi bi-person-plus-fill me-2"></i>
+            Create Account
+        </button>
+    </form>
+
+    <!-- Login link -->
+    <div class="login-link">
+        Already have an account?
+        <a href="{% url 'login' %}">Login here</a>
+    </div>
+
+    <div class="footer-note">
+        <i class="bi bi-shield-check me-1"></i>
+        Secure registration · Campus Care
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

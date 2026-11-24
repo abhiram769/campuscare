@@ -1,0 +1,728 @@
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Faculty Dashboard | Campus Care{% endblock %}
+
+{% block extra_css %}
+<style>
+.faculty-layout {
+    display: flex;
+    min-height: 85vh;
+    background: #f6f9f7;
+}
+
+.faculty-sidebar {
+    width: 245px;
+    background: #153e2c;
+    padding: 28px 18px;
+    color: white;
+    flex-shrink: 0;
+}
+
+.faculty-main {
+    flex: 1;
+    min-width: 0;
+    padding: 35px;
+}
+
+.faculty-sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 14px;
+    color: #d5e7dc;
+    text-decoration: none;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    transition: .2s;
+}
+
+.faculty-sidebar-link:hover,
+.faculty-sidebar-link.active {
+    background: #286b49;
+    color: white;
+}
+
+.faculty-sidebar-link i {
+    font-size: 19px;
+}
+
+.faculty-welcome {
+    background: linear-gradient(120deg, #174c38, #27875b);
+    padding: 32px;
+    color: white;
+    border-radius: 20px;
+    margin-bottom: 28px;
+}
+
+.faculty-welcome p {
+    color: #dcefe3;
+}
+
+.faculty-card,
+.profile-panel,
+.analytics-panel {
+    padding: 23px;
+    border: 1px solid #e8eee9;
+    background: white;
+    border-radius: 16px;
+    height: 100%;
+}
+
+.faculty-card-icon {
+    width: 47px;
+    height: 47px;
+    background: #eaf5ee;
+    color: #176b45;
+    border-radius: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    margin-bottom: 17px;
+}
+
+.faculty-action {
+    background: white;
+    border: 1px solid #e8eee9;
+    border-radius: 16px;
+    padding: 25px;
+    height: 100%;
+    transition: .2s;
+}
+
+.faculty-action:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0,0,0,.05);
+}
+
+.faculty-action-icon {
+    color: #198754;
+    font-size: 28px;
+    margin-bottom: 15px;
+}
+
+.profile-avatar {
+    width: 65px;
+    height: 65px;
+    border-radius: 18px;
+    background: #eaf5ee;
+    color: #176b45;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 27px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.profile-detail {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-top: 17px;
+    color: #53665a;
+    overflow-wrap: anywhere;
+}
+
+.profile-detail i {
+    color: #198754;
+    font-size: 18px;
+}
+
+.chart-container {
+    position: relative;
+    width: 100%;
+    height: 300px;
+}
+
+@media(max-width: 850px) {
+    .faculty-layout {
+        display: block;
+    }
+
+    .faculty-sidebar {
+        width: 100%;
+        padding: 12px;
+    }
+
+    .faculty-sidebar .menu {
+        display: flex;
+        overflow-x: auto;
+        gap: 5px;
+    }
+
+    .faculty-sidebar-link {
+        white-space: nowrap;
+        margin: 0;
+    }
+
+    .faculty-main {
+        padding: 20px 14px;
+    }
+}
+
+@media(max-width: 768px) {
+    .chart-container {
+        height: 260px;
+    }
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="faculty-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="faculty-sidebar">
+
+        <h5 class="fw-bold px-2">
+            <i class="bi bi-mortarboard-fill text-success"></i>
+            Faculty Portal
+        </h5>
+
+        <p class="small text-white-50 px-2">
+            Campus Care
+        </p>
+
+        <div class="small text-uppercase text-white-50 mt-4 mb-2 px-2">
+            Main Menu
+        </div>
+
+        <div class="menu flex-column">
+
+            <a href="{% url 'faculty_dashboard' %}"
+               class="faculty-sidebar-link active">
+                <i class="bi bi-grid"></i> Dashboard
+            </a>
+
+            <a href="{% url 'submit_complaint' %}"
+               class="faculty-sidebar-link">
+                <i class="bi bi-plus-circle"></i> Report an Issue
+            </a>
+
+            <a href="{% url 'my_complaints' %}"
+               class="faculty-sidebar-link">
+                <i class="bi bi-clipboard-check"></i> My Complaints
+            </a>
+
+            <a href="{% url 'notification_list' %}"
+               class="faculty-sidebar-link">
+                <i class="bi bi-bell"></i> Notifications
+            </a>
+
+        </div>
+
+        <div class="small text-uppercase text-white-50 mt-4 mb-2 px-2">
+            Account
+        </div>
+
+        <a href="{% url 'logout' %}" class="faculty-sidebar-link">
+            <i class="bi bi-box-arrow-left"></i> Logout
+        </a>
+
+    </aside>
+
+
+    <!-- MAIN CONTENT -->
+    <main class="faculty-main">
+
+        <!-- WELCOME BANNER -->
+        <section class="faculty-welcome">
+
+            <div class="row align-items-center">
+
+                <div class="col-lg-8">
+
+                    <span class="badge bg-light text-success mb-3">
+                        FACULTY PORTAL
+                    </span>
+
+                    <h2 class="fw-bold">
+                        Welcome,
+                        {{ user.first_name|default:user.username }}!
+                    </h2>
+
+                    <p class="mb-4">
+                        Help maintain a better campus environment.
+                        Report issues and follow their resolution.
+                    </p>
+
+                    <a href="{% url 'submit_complaint' %}"
+                       class="btn btn-light text-success fw-semibold">
+
+                        <i class="bi bi-plus-circle me-2"></i>
+                        Report an Issue
+
+                    </a>
+
+                </div>
+
+                <div class="col-lg-4 text-center d-none d-lg-block">
+
+                    <i class="bi bi-mortarboard"
+                       style="font-size: 105px; opacity: .75;"></i>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- COMPLAINT STATISTICS -->
+        <h5 class="fw-bold mb-3">Faculty Overview</h5>
+
+        <div class="row g-3 mb-4">
+
+            <div class="col-md-4">
+                <div class="faculty-card">
+
+                    <div class="faculty-card-icon">
+                        <i class="bi bi-clipboard-data"></i>
+                    </div>
+
+                    <h6 class="text-secondary">Total Complaints</h6>
+
+                    <h2 class="fw-bold">
+                        {{ total_complaints }}
+                    </h2>
+
+                    <small class="text-secondary">
+                        Issues reported by you
+                    </small>
+
+                </div>
+            </div>
+
+
+            <div class="col-md-4">
+                <div class="faculty-card">
+
+                    <div class="faculty-card-icon">
+                        <i class="bi bi-hourglass-split"></i>
+                    </div>
+
+                    <h6 class="text-secondary">Pending Complaints</h6>
+
+                    <h2 class="fw-bold text-warning">
+                        {{ pending_complaints }}
+                    </h2>
+
+                    <small class="text-secondary">
+                        Awaiting resolution
+                    </small>
+
+                </div>
+            </div>
+
+
+            <div class="col-md-4">
+                <div class="faculty-card">
+
+                    <div class="faculty-card-icon">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+
+                    <h6 class="text-secondary">Completed Complaints</h6>
+
+                    <h2 class="fw-bold text-success">
+                        {{ completed_complaints }}
+                    </h2>
+
+                    <small class="text-secondary">
+                        Successfully resolved
+                    </small>
+
+                </div>
+            </div>
+
+        </div>
+
+
+        <!-- RECENT COMPLAINTS -->
+        <div class="faculty-card mb-4">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+
+                <h5 class="fw-bold mb-0">
+                    Recent Complaints
+                </h5>
+
+                <a href="{% url 'my_complaints' %}"
+                   class="text-success text-decoration-none small">
+                    View All →
+                </a>
+
+            </div>
+
+            {% if recent_complaints %}
+
+            <div class="table-responsive">
+
+                <table class="table align-middle">
+
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Category</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for complaint in recent_complaints %}
+
+                        <tr>
+
+                            <td>#{{ complaint.id }}</td>
+
+                            <td>
+                                {{ complaint.get_category_display }}
+                            </td>
+
+                            <td>
+                                {{ complaint.location }}
+                            </td>
+
+                            <td>
+
+                                {% if complaint.status == 'COMPLETED' %}
+                                    <span class="badge bg-success">
+                                        Completed
+                                    </span>
+
+                                {% elif complaint.status == 'IN_PROGRESS' %}
+                                    <span class="badge bg-primary">
+                                        In Progress
+                                    </span>
+
+                                {% elif complaint.status == 'DUPLICATE' %}
+                                    <span class="badge bg-secondary">
+                                        Duplicate
+                                    </span>
+
+                                {% elif complaint.status == 'SUBMITTED' %}
+                                    <span class="badge bg-info text-dark">
+                                        Submitted
+                                    </span>
+
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">
+                                        {{ complaint.get_status_display }}
+                                    </span>
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+                                {{ complaint.created_at|date:"d M Y" }}
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            {% else %}
+
+            <div class="text-center py-4">
+
+                <i class="bi bi-inbox text-secondary"
+                   style="font-size: 40px;"></i>
+
+                <h6 class="mt-3">No complaints yet</h6>
+
+                <p class="text-secondary">
+                    Your submitted complaints will appear here.
+                </p>
+
+                <a href="{% url 'submit_complaint' %}"
+                   class="btn btn-success">
+                    Submit a Complaint
+                </a>
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- PROFILE AND ANALYTICS -->
+        <div class="row g-4 mb-4">
+
+            <!-- FACULTY PROFILE -->
+            <div class="col-lg-5">
+
+                <div class="profile-panel">
+
+                    <h5 class="fw-bold mb-4">
+                        My Faculty Profile
+                    </h5>
+
+                    <div class="d-flex align-items-center gap-3">
+
+                        <div class="profile-avatar">
+                            {{ user.first_name|default:user.username|first|upper }}
+                        </div>
+
+                        <div>
+
+                            <h5 class="fw-bold mb-1">
+                                {{ user.get_full_name|default:user.username }}
+                            </h5>
+
+                            <span class="badge bg-success">
+                                Faculty
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="profile-detail">
+                        <i class="bi bi-person"></i>
+                        <span>{{ user.username }}</span>
+                    </div>
+
+                    <div class="profile-detail">
+                        <i class="bi bi-envelope"></i>
+                        <span>
+                            {{ user.email|default:"Not provided" }}
+                        </span>
+                    </div>
+
+                    <div class="profile-detail">
+                        <i class="bi bi-building"></i>
+                        <span>
+                            {{ user.department|default:"Department not provided" }}
+                        </span>
+                    </div>
+
+                    <div class="profile-detail">
+                        <i class="bi bi-telephone"></i>
+                        <span>
+                            {{ user.phone|default:"Phone not provided" }}
+                        </span>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- COMPLAINT CHART -->
+            <div class="col-lg-7">
+
+                <div class="analytics-panel">
+
+                    <h5 class="fw-bold mb-1">
+                        Complaint Status Analysis
+                    </h5>
+
+                    <p class="text-secondary small">
+                        Breakdown of your submitted complaints
+                    </p>
+
+                    <div class="chart-container">
+
+                        <canvas id="facultyComplaintChart"></canvas>
+
+                    </div>
+
+                    {% if total_complaints == 0 %}
+                        <p class="text-center text-secondary small">
+                            Submit your first complaint to see the chart.
+                        </p>
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- QUICK ACTIONS -->
+        <h5 class="fw-bold mb-3">Quick Actions</h5>
+
+        <div class="row g-3 mb-4">
+
+            <div class="col-md-6">
+
+                <div class="faculty-action">
+
+                    <div class="faculty-action-icon">
+                        <i class="bi bi-file-earmark-plus"></i>
+                    </div>
+
+                    <h5 class="fw-bold">
+                        Submit a Complaint
+                    </h5>
+
+                    <p class="text-secondary">
+                        Report cleanliness, electrical, plumbing
+                        or other maintenance issues around campus.
+                    </p>
+
+                    <a href="{% url 'submit_complaint' %}"
+                       class="btn btn-success">
+
+                        Submit Complaint
+                        <i class="bi bi-arrow-right ms-1"></i>
+
+                    </a>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-md-6">
+
+                <div class="faculty-action">
+
+                    <div class="faculty-action-icon">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+
+                    <h5 class="fw-bold">
+                        Complaint History
+                    </h5>
+
+                    <p class="text-secondary">
+                        Review your previously submitted complaints
+                        and see their current status.
+                    </p>
+
+                    <a href="{% url 'my_complaints' %}"
+                       class="btn btn-outline-success">
+
+                        View History
+                        <i class="bi bi-arrow-right ms-1"></i>
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- INFORMATION -->
+        <div class="faculty-card">
+
+            <h5 class="fw-bold mb-3">
+                <i class="bi bi-info-circle text-success me-2"></i>
+                Your Role in Campus Care
+            </h5>
+
+            <p class="text-secondary mb-0">
+                Faculty members can contribute to campus cleanliness
+                and maintenance by reporting issues, monitoring
+                resolution progress and sharing feedback after
+                the work is completed.
+            </p>
+
+        </div>
+
+    </main>
+
+</div>
+
+{% include 'notifications/live_notifications.html' %}
+
+{% endblock %}
+
+
+{% block extra_js %}
+
+{{ status_chart_labels|json_script:"faculty-chart-labels" }}
+{{ status_chart_data|json_script:"faculty-chart-data" }}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const labelsElement = document.getElementById(
+        'faculty-chart-labels'
+    );
+
+    const dataElement = document.getElementById(
+        'faculty-chart-data'
+    );
+
+    const canvas = document.getElementById(
+        'facultyComplaintChart'
+    );
+
+    if (!labelsElement || !dataElement || !canvas) {
+        console.error('Faculty chart elements are missing.');
+        return;
+    }
+
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js failed to load.');
+        return;
+    }
+
+    const labels = JSON.parse(labelsElement.textContent);
+    const values = JSON.parse(dataElement.textContent);
+
+    new Chart(canvas, {
+
+        type: 'doughnut',
+
+        data: {
+            labels: labels,
+
+            datasets: [{
+                data: values,
+
+                backgroundColor: [
+                    '#60a5fa',
+                    '#a78bfa',
+                    '#fbbf24',
+                    '#fb923c',
+                    '#38bdf8',
+                    '#22c55e',
+                    '#94a3b8'
+                ],
+
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+
+    });
+
+});
+</script>
+
+{% endblock %}

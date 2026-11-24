@@ -1,0 +1,150 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Edit Worker | Campus Care</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+</head>
+
+
+<body class="bg-light">
+
+
+<nav class="navbar navbar-dark bg-success px-4 py-3">
+
+    <span class="navbar-brand fw-bold">
+        Campus Care | Edit Worker
+    </span>
+
+    <a
+        href="{% url 'admin_staff_management' %}"
+        class="btn btn-light btn-sm"
+    >
+        Back to Staff
+    </a>
+
+</nav>
+
+
+
+<div class="container py-5" style="max-width:750px">
+
+
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+
+
+        <h3 class="fw-bold">
+            Edit Worker Details
+        </h3>
+
+
+        <p class="text-muted">
+
+            Editing account:
+
+            <strong>{{ staff_member.username }}</strong>
+
+        </p>
+
+
+
+        <form method="POST">
+
+            {% csrf_token %}
+
+
+            {% if form.non_field_errors %}
+
+                <div class="alert alert-danger">
+
+                    {{ form.non_field_errors }}
+
+                </div>
+
+            {% endif %}
+
+
+
+            {% for field in form %}
+
+
+                <div class="mb-3">
+
+
+                    <label
+                        class="form-label fw-semibold"
+                        for="{{ field.id_for_label }}"
+                    >
+
+                        {{ field.label }}
+
+                    </label>
+
+
+                    {{ field }}
+
+
+                    {% for error in field.errors %}
+
+                        <div class="text-danger small">
+
+                            {{ error }}
+
+                        </div>
+
+                    {% endfor %}
+
+
+                </div>
+
+
+            {% endfor %}
+
+
+
+            <button
+                class="btn btn-success"
+                type="submit"
+            >
+
+                <i class="bi bi-save me-1"></i>
+
+                Save Changes
+
+            </button>
+
+
+
+            <a
+                href="{% url 'admin_staff_management' %}"
+                class="btn btn-outline-secondary"
+            >
+
+                Cancel
+
+            </a>
+
+
+        </form>
+
+
+    </div>
+
+
+</div>
+
+
+</body>
+
+</html>

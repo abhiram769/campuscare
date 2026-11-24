@@ -1,0 +1,893 @@
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Dashboard | Campus Care{% endblock %}
+
+{% block extra_css %}
+<style>
+/* =====================================
+   DASHBOARD LAYOUT
+===================================== */
+
+.dashboard-layout {
+    display: flex;
+    min-height: 0;
+    background: #f6f9f7;
+    align-items: stretch;
+}
+
+.dashboard-sidebar {
+    width: 245px;
+    background: #153e2c;
+    padding: 28px 18px;
+    color: white;
+    flex-shrink: 0;
+}
+
+.sidebar-heading {
+    font-size: 12px;
+    color: #a9c7b5;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin: 28px 12px 12px;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 14px;
+    color: #d5e7dc;
+    text-decoration: none;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    transition: .2s;
+}
+
+.sidebar-link:hover,
+.sidebar-link.active {
+    background: #286b49;
+    color: white;
+}
+
+.sidebar-link i {
+    font-size: 19px;
+}
+
+.dashboard-main {
+    flex: 1;
+    padding: 28px 32px;
+    min-width: 0;
+}
+
+/* =====================================
+   WELCOME BANNER
+===================================== */
+
+.welcome-panel {
+    background: linear-gradient(120deg, #176b45, #27875b);
+    border-radius: 20px;
+    padding: 30px;
+    color: white;
+    margin-bottom: 24px;
+}
+
+.welcome-panel p {
+    color: #dcefe3;
+}
+
+/* =====================================
+   OVERVIEW CARDS
+===================================== */
+
+.overview-card {
+    background: white;
+    border: 1px solid #e8eee9;
+    border-radius: 16px;
+    padding: 22px;
+    height: 100%;
+    transition: .2s;
+}
+
+.overview-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0,0,0,.05);
+}
+
+.overview-icon {
+    width: 47px;
+    height: 47px;
+    border-radius: 13px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #eaf5ee;
+    color: #176b45;
+    font-size: 22px;
+    margin-bottom: 15px;
+}
+
+/* =====================================
+   SECTION HEADINGS
+===================================== */
+
+.dashboard-section-title {
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+/* =====================================
+   INFORMATION AND PROFILE CARDS
+===================================== */
+
+.info-panel,
+.profile-panel,
+.analytics-panel {
+    background: white;
+    border: 1px solid #e8eee9;
+    padding: 22px;
+    border-radius: 16px;
+    height: auto;
+}
+
+.profile-avatar {
+    width: 65px;
+    height: 65px;
+    border-radius: 18px;
+    background: #eaf5ee;
+    color: #176b45;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 27px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.profile-detail {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-top: 15px;
+    color: #53665a;
+    overflow-wrap: anywhere;
+}
+
+.profile-detail i {
+    color: #198754;
+    font-size: 18px;
+}
+
+/* =====================================
+   COMPLAINT ANALYTICS CHART
+===================================== */
+
+.chart-container {
+    position: relative;
+    width: 100%;
+    height: 280px;
+}
+
+/* =====================================
+   QUICK ACTION CARDS
+===================================== */
+
+.action-card {
+    background: white;
+    border: 1px solid #e8eee9;
+    padding: 22px;
+    border-radius: 16px;
+    height: 100%;
+    transition: .2s;
+}
+
+.action-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0,0,0,.05);
+}
+
+.action-card .action-icon {
+    font-size: 27px;
+    color: #198754;
+    margin-bottom: 12px;
+}
+
+/* =====================================
+   TABLE
+===================================== */
+
+.info-panel .table {
+    margin-bottom: 0;
+}
+
+.info-panel .table th {
+    white-space: nowrap;
+    font-size: 14px;
+}
+
+.info-panel .table td {
+    font-size: 14px;
+}
+
+/* =====================================
+   HOW IT WORKS
+===================================== */
+
+.how-it-works-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.how-it-works-item > i {
+    flex-shrink: 0;
+}
+
+/* =====================================
+   RESPONSIVE DESIGN
+===================================== */
+
+@media(max-width: 850px) {
+    .dashboard-layout {
+        display: block;
+    }
+
+    .dashboard-sidebar {
+        width: 100%;
+        padding: 12px;
+    }
+
+    .sidebar-heading {
+        display: none;
+    }
+
+    .sidebar-menu {
+        display: flex;
+        overflow-x: auto;
+        gap: 5px;
+        flex-direction: row !important;
+    }
+
+    .sidebar-link {
+        white-space: nowrap;
+        margin: 0;
+    }
+
+    .dashboard-main {
+        padding: 20px 14px;
+    }
+}
+
+@media(max-width: 768px) {
+    .chart-container {
+        height: 250px;
+    }
+
+    .welcome-panel {
+        padding: 23px;
+    }
+
+    .profile-panel,
+    .analytics-panel,
+    .info-panel {
+        padding: 18px;
+    }
+}
+
+@media(max-width: 480px) {
+    .welcome-panel h2 {
+        font-size: 23px;
+    }
+
+    .dashboard-main {
+        padding: 16px 12px;
+    }
+
+    .overview-card,
+    .action-card {
+        padding: 18px;
+    }
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="dashboard-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="dashboard-sidebar">
+
+        <h5 class="fw-bold px-2">
+            <i class="bi bi-leaf-fill text-success"></i>
+            Student Portal
+        </h5>
+
+        <p class="small text-white-50 px-2">
+            Campus Care
+        </p>
+
+        <div class="sidebar-heading">Main Menu</div>
+
+        <div class="sidebar-menu flex-column">
+
+            <a href="{% url 'student_dashboard' %}"
+               class="sidebar-link active">
+                <i class="bi bi-grid"></i>
+                Dashboard
+            </a>
+
+            <a href="{% url 'submit_complaint' %}"
+               class="sidebar-link">
+                <i class="bi bi-plus-circle"></i>
+                Report an Issue
+            </a>
+
+            <a href="{% url 'my_complaints' %}"
+               class="sidebar-link">
+                <i class="bi bi-clipboard-check"></i>
+                My Complaints
+            </a>
+
+            <a href="{% url 'notification_list' %}"
+               class="sidebar-link">
+                <i class="bi bi-bell"></i>
+                Notifications
+            </a>
+
+        </div>
+
+        <div class="sidebar-heading">Account</div>
+
+        <a href="{% url 'logout' %}" class="sidebar-link">
+            <i class="bi bi-box-arrow-left"></i>
+            Logout
+        </a>
+
+    </aside>
+
+
+    <!-- MAIN CONTENT -->
+    <main class="dashboard-main">
+
+        <!-- WELCOME -->
+        <section class="welcome-panel">
+
+            <div class="row align-items-center">
+
+                <div class="col-lg-8">
+
+                    <span class="badge bg-light text-success mb-3">
+                        STUDENT PORTAL
+                    </span>
+
+                    <h2 class="fw-bold">
+                        Welcome, {{ user.first_name|default:user.username }}!
+                    </h2>
+
+                    <p class="mb-4">
+                        Your voice matters. Help us maintain a cleaner,
+                        safer and greener campus.
+                    </p>
+
+                    <a href="{% url 'submit_complaint' %}"
+                       class="btn btn-light text-success fw-semibold">
+
+                        <i class="bi bi-plus-circle me-2"></i>
+                        Submit a Complaint
+
+                    </a>
+
+                </div>
+
+                <div class="col-lg-4 text-center d-none d-lg-block">
+
+                    <i class="bi bi-buildings"
+                       style="font-size: 110px; opacity: .75;"></i>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- OVERVIEW -->
+        <h5 class="dashboard-section-title">
+            Your Overview
+        </h5>
+
+        <div class="row g-3 mb-4">
+
+            <!-- TOTAL -->
+            <div class="col-md-4">
+
+                <div class="overview-card">
+
+                    <div class="overview-icon">
+                        <i class="bi bi-clipboard-data"></i>
+                    </div>
+
+                    <h6 class="text-secondary">
+                        Total Complaints
+                    </h6>
+
+                    <h2 class="fw-bold">
+                        {{ total_complaints }}
+                    </h2>
+
+                    <small class="text-secondary">
+                        Issues reported by you
+                    </small>
+
+                </div>
+
+            </div>
+
+
+            <!-- PENDING -->
+            <div class="col-md-4">
+
+                <div class="overview-card">
+
+                    <div class="overview-icon">
+                        <i class="bi bi-hourglass-split"></i>
+                    </div>
+
+                    <h6 class="text-secondary">
+                        Pending Complaints
+                    </h6>
+
+                    <h2 class="fw-bold text-warning">
+                        {{ pending_complaints }}
+                    </h2>
+
+                    <small class="text-secondary">
+                        Awaiting resolution
+                    </small>
+
+                </div>
+
+            </div>
+
+
+            <!-- COMPLETED -->
+            <div class="col-md-4">
+
+                <div class="overview-card">
+
+                    <div class="overview-icon">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+
+                    <h6 class="text-secondary">
+                        Completed Complaints
+                    </h6>
+
+                    <h2 class="fw-bold text-success">
+                        {{ completed_complaints }}
+                    </h2>
+
+                    <small class="text-secondary">
+                        Successfully resolved
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- RECENT COMPLAINTS -->
+        <div class="info-panel mb-4">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+
+                <h5 class="fw-bold mb-0">
+                    Recent Complaints
+                </h5>
+
+                <a href="{% url 'my_complaints' %}"
+                   class="text-success text-decoration-none">
+                    View All →
+                </a>
+
+            </div>
+
+            {% if recent_complaints %}
+
+            <div class="table-responsive">
+
+                <table class="table align-middle">
+
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Category</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for complaint in recent_complaints %}
+
+                        <tr>
+
+                            <td>#{{ complaint.id }}</td>
+
+                            <td>
+                                {{ complaint.get_category_display }}
+                            </td>
+
+                            <td>
+                                {{ complaint.location }}
+                            </td>
+
+                            <td>
+
+                                <span class="badge
+                                    {% if complaint.status == 'COMPLETED' %}bg-success
+                                    {% elif complaint.status == 'IN_PROGRESS' %}bg-primary
+                                    {% elif complaint.status == 'DUPLICATE' %}bg-secondary
+                                    {% elif complaint.status == 'SUBMITTED' %}bg-info text-dark
+                                    {% else %}bg-warning text-dark{% endif %}">
+
+                                    {{ complaint.get_status_display }}
+
+                                </span>
+
+                            </td>
+
+                            <td>
+                                {{ complaint.created_at|date:"d M Y" }}
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            {% else %}
+
+            <p class="text-secondary mb-0">
+                No complaints submitted yet.
+            </p>
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- STUDENT PROFILE AND CHART -->
+        <div class="row g-3 mb-4">
+
+            <!-- STUDENT PROFILE -->
+            <div class="col-lg-5">
+
+                <div class="profile-panel">
+
+                    <h5 class="fw-bold mb-4">
+                        My Profile
+                    </h5>
+
+                    <div class="d-flex align-items-center gap-3">
+
+                        <div class="profile-avatar">
+                            {{ user.first_name|default:user.username|first|upper }}
+                        </div>
+
+                        <div>
+
+                            <h5 class="fw-bold mb-1">
+                                {{ user.get_full_name|default:user.username }}
+                            </h5>
+
+                            <span class="badge bg-success">
+                                Student
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    <div class="profile-detail">
+                        <i class="bi bi-person"></i>
+                        <span>{{ user.username }}</span>
+                    </div>
+
+                    <div class="profile-detail">
+                        <i class="bi bi-envelope"></i>
+                        <span>
+                            {{ user.email|default:"Not provided" }}
+                        </span>
+                    </div>
+
+                    <div class="profile-detail">
+                        <i class="bi bi-building"></i>
+                        <span>
+                            {{ user.department|default:"Department not provided" }}
+                        </span>
+                    </div>
+
+                    <div class="profile-detail">
+                        <i class="bi bi-telephone"></i>
+                        <span>
+                            {{ user.phone|default:"Phone not provided" }}
+                        </span>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- COMPLAINT STATUS CHART -->
+            <div class="col-lg-7">
+
+                <div class="analytics-panel">
+
+                    <h5 class="fw-bold mb-1">
+                        Complaint Status Analysis
+                    </h5>
+
+                    <p class="text-secondary small">
+                        Breakdown of your submitted complaints
+                    </p>
+
+                    <div class="chart-container">
+
+                        <canvas id="studentComplaintChart"></canvas>
+
+                    </div>
+
+                    {% if total_complaints == 0 %}
+
+                    <p class="text-center text-secondary small">
+                        Submit your first complaint to see the chart.
+                    </p>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- QUICK ACTIONS -->
+        <h5 class="dashboard-section-title">
+            Quick Actions
+        </h5>
+
+        <div class="row g-3 mb-4">
+
+            <div class="col-md-6">
+
+                <div class="action-card">
+
+                    <div class="action-icon">
+                        <i class="bi bi-camera"></i>
+                    </div>
+
+                    <h5 class="fw-bold">
+                        Report a Campus Issue
+                    </h5>
+
+                    <p class="text-secondary">
+                        Found garbage, damaged facilities or
+                        maintenance problems? Report them here.
+                    </p>
+
+                    <a href="{% url 'submit_complaint' %}"
+                       class="btn btn-success">
+
+                        Report Now
+                        <i class="bi bi-arrow-right ms-1"></i>
+
+                    </a>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-md-6">
+
+                <div class="action-card">
+
+                    <div class="action-icon">
+                        <i class="bi bi-list-check"></i>
+                    </div>
+
+                    <h5 class="fw-bold">
+                        Track Your Complaints
+                    </h5>
+
+                    <p class="text-secondary">
+                        Check the current status and updates
+                        of the complaints you have submitted.
+                    </p>
+
+                    <a href="{% url 'my_complaints' %}"
+                       class="btn btn-outline-success">
+
+                        View Complaints
+                        <i class="bi bi-arrow-right ms-1"></i>
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- HOW IT WORKS -->
+        <div class="info-panel">
+
+            <h5 class="fw-bold mb-3">
+                How Campus Care Works
+            </h5>
+
+            <div class="row g-3">
+
+                <div class="col-md-4">
+
+                    <div class="how-it-works-item">
+
+                        <i class="bi bi-camera text-success fs-3"></i>
+
+                        <div>
+                            <strong>1. Report</strong>
+
+                            <p class="small text-secondary mb-0">
+                                Submit an issue with a photo and location.
+                            </p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="col-md-4">
+
+                    <div class="how-it-works-item">
+
+                        <i class="bi bi-tools text-success fs-3"></i>
+
+                        <div>
+                            <strong>2. Resolution</strong>
+
+                            <p class="small text-secondary mb-0">
+                                Staff members work on the assigned issue.
+                            </p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="col-md-4">
+
+                    <div class="how-it-works-item">
+
+                        <i class="bi bi-check-circle text-success fs-3"></i>
+
+                        <div>
+                            <strong>3. Completion</strong>
+
+                            <p class="small text-secondary mb-0">
+                                Track completion and share your feedback.
+                            </p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<!-- LIVE NOTIFICATIONS -->
+{% include 'notifications/live_notifications.html' %}
+
+
+<!-- CHART DATA -->
+{{ status_chart_labels|json_script:"student-chart-labels" }}
+{{ status_chart_data|json_script:"student-chart-data" }}
+
+
+<!-- CHART.JS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const labelsElement = document.getElementById(
+        'student-chart-labels'
+    );
+
+    const dataElement = document.getElementById(
+        'student-chart-data'
+    );
+
+    const canvas = document.getElementById(
+        'studentComplaintChart'
+    );
+
+    if (!labelsElement || !dataElement || !canvas) {
+        console.error('Student chart elements are missing.');
+        return;
+    }
+
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js failed to load.');
+        return;
+    }
+
+    const labels = JSON.parse(labelsElement.textContent);
+    const values = JSON.parse(dataElement.textContent);
+
+    new Chart(canvas, {
+
+        type: 'doughnut',
+
+        data: {
+            labels: labels,
+
+            datasets: [{
+                data: values,
+
+                backgroundColor: [
+                    '#60a5fa',
+                    '#a78bfa',
+                    '#fbbf24',
+                    '#fb923c',
+                    '#38bdf8',
+                    '#22c55e',
+                    '#94a3b8'
+                ],
+
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+
+    });
+
+});
+</script>
+
+{% endblock %}

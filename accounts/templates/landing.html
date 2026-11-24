@@ -1,0 +1,226 @@
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Campus Care | A Cleaner Campus Starts With You{% endblock %}
+
+{% block content %}
+
+<!-- HERO SECTION -->
+<section class="hero-section">
+    <div class="container py-5">
+        <div class="row align-items-center min-vh-75">
+
+            <div class="col-lg-6 py-5">
+                <span class="hero-badge">
+                    <i class="bi bi-leaf-fill"></i>
+                    Smart Campus Management
+                </span>
+
+                <h1 class="hero-title mt-4">
+                    A Cleaner Campus
+                    <span>Starts With You.</span>
+                </h1>
+
+                <p class="hero-description mt-4">
+                    Campus Care brings students, faculty, administrators
+                    and cleaning staff together to create a cleaner,
+                    safer and more sustainable campus.
+                </p>
+
+                <div class="d-flex flex-wrap gap-3 mt-4">
+                    <a href="{% url 'login' %}" class="btn btn-success btn-lg">
+                        Report an Issue
+                        <i class="bi bi-arrow-right ms-2"></i>
+                    </a>
+
+                    <a href="#how-it-works" class="btn btn-outline-dark btn-lg">
+                        Explore Platform
+                    </a>
+                </div>
+
+                <div class="hero-trust mt-5">
+                    <div>
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                        Easy Complaint Reporting
+                    </div>
+                    <div>
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                        Real-Time Updates
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6 py-4">
+                <div class="hero-image-wrapper">
+                    <img
+                        src="https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1100&q=85"
+                        alt="Green university campus"
+                        class="hero-image">
+
+                    <div class="floating-card">
+                        <div class="floating-icon">
+                            <i class="bi bi-recycle"></i>
+                        </div>
+                        <div>
+                            <strong>Small Actions, Big Impact</strong>
+                            <p class="mb-0 text-secondary small">
+                                Together for a better campus
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- FEATURES SECTION -->
+<section id="features" class="py-5">
+    <div class="container py-4">
+
+        <div class="text-center mb-5">
+            <span class="section-label">OUR FEATURES</span>
+            <h2 class="section-heading mt-2">
+                Everything Your Campus Needs
+            </h2>
+            <p class="text-secondary">
+                A single platform to report, manage and resolve campus issues.
+            </p>
+        </div>
+
+        <div class="row g-4">
+
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-megaphone"></i>
+                    </div>
+                    <h5>Report Issues</h5>
+                    <p class="text-secondary mb-0">
+                        Report cleanliness and maintenance problems
+                        with photos and campus locations.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-geo-alt"></i>
+                    </div>
+                    <h5>Location Tracking</h5>
+                    <p class="text-secondary mb-0">
+                        Identify the exact campus location of reported
+                        problems using an interactive map.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-clipboard-check"></i>
+                    </div>
+                    <h5>Track Progress</h5>
+                    <p class="text-secondary mb-0">
+                        Follow complaint progress from submission
+                        to successful completion.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <h5>Team Coordination</h5>
+                    <p class="text-secondary mb-0">
+                        Connect administrators and cleaning staff
+                        to resolve issues efficiently.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how-it-works" class="how-section py-5">
+    <div class="container py-4">
+
+        <div class="text-center mb-5">
+            <span class="section-label">SIMPLE PROCESS</span>
+            <h2 class="section-heading mt-2">
+                How Campus Care Works
+            </h2>
+            <p class="text-secondary">
+                Three simple steps towards a cleaner campus.
+            </p>
+        </div>
+
+        <div class="row g-4 text-center">
+
+            <div class="col-md-4">
+                <div class="process-card">
+                    <div class="process-number">01</div>
+                    <i class="bi bi-camera process-icon"></i>
+                    <h5>Report</h5>
+                    <p class="text-secondary">
+                        Students and faculty submit complaints
+                        with descriptions, photographs and locations.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="process-card">
+                    <div class="process-number">02</div>
+                    <i class="bi bi-person-workspace process-icon"></i>
+                    <h5>Resolve</h5>
+                    <p class="text-secondary">
+                        Administrators assign tasks to cleaning staff
+                        who work towards resolving the issue.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="process-card">
+                    <div class="process-number">03</div>
+                    <i class="bi bi-check-circle process-icon"></i>
+                    <h5>Complete</h5>
+                    <p class="text-secondary">
+                        Staff upload completion evidence and
+                        users can share their feedback.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- CALL TO ACTION -->
+<section class="cta-section py-5">
+    <div class="container text-center py-4">
+        <h2 class="fw-bold text-white">
+            Be Part of a Cleaner Campus
+        </h2>
+
+        <p class="text-white-50 mt-3">
+            Your report can make a real difference.
+            Join Campus Care today.
+        </p>
+
+        <a href="{% url 'register' role='STUDENT' %}"
+           class="btn btn-light btn-lg mt-3">
+            Get Started <i class="bi bi-arrow-right ms-2"></i>
+        </a>
+    </div>
+</section>
+
+{% endblock %}
