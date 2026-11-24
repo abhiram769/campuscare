@@ -79,10 +79,12 @@ function RequesterDashboard({ user }) {
     setError("");
     setNotice("");
     try {
-      if (imageFiles.length > 0 && form.latitude && form.longitude && !confirmDuplicate) {
+      if (imageFiles.length > 0 && !confirmDuplicate) {
         const checkPayload = new FormData();
-        checkPayload.append("latitude", form.latitude);
-        checkPayload.append("longitude", form.longitude);
+        if (form.latitude && form.longitude) {
+          checkPayload.append("latitude", form.latitude);
+          checkPayload.append("longitude", form.longitude);
+        }
         imageFiles.forEach((file) => checkPayload.append("images", file));
         const duplicateResponse = await api.post("/complaints/duplicates/check", checkPayload, { headers: { "Content-Type": "multipart/form-data" } });
         const matches = duplicateResponse.data.matches || [];
@@ -159,7 +161,7 @@ function RequesterDashboard({ user }) {
                 <strong>Possible duplicate reports found</strong>
                 <p>These recent reports are nearby and contain visually similar photos. Please check them before submitting again.</p>
                 {duplicateMatches.map((match) => <div className="duplicate-match" key={match.complaintId}>
-                  <span><b>{match.title}</b><small>{match.location} · {match.distanceMeters} m away · {match.similarity}% image similarity</small></span>
+                  <span><b>{match.title}</b><small>{match.location} · {match.distanceMeters == null ? "GPS distance not checked" : `${match.distanceMeters} m away`} · {match.similarity}% image similarity</small></span>
                 </div>)}
                 <button type="button" className="duplicate-cancel" onClick={() => { setDuplicateMatches([]); setConfirmDuplicate(false); setNotice(""); }}>Review my report</button>
               </div>}
