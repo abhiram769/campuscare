@@ -14,7 +14,7 @@ function StatusPill({ status }) {
   return <span className={`complaint-status status-${String(status || "").toLowerCase()}`}>{statusLabels[status] || status}</span>;
 }
 
-function RequesterDashboard({ user }) {
+function RequesterDashboard({ user, logout, navigate }) {
   const [stats, setStats] = useState({ total: 0, open: 0, completed: 0 });
   const [complaints, setComplaints] = useState([]);
   const [form, setForm] = useState(emptyForm);
@@ -120,7 +120,7 @@ function RequesterDashboard({ user }) {
     <main className="dashboard-page">
       <header className="dashboard-topbar">
         <Link className="dashboard-brand" to="/"><span className="dashboard-brand-mark">C</span> Campus Care</Link>
-        <div className="dashboard-user"><span className="user-avatar">{user?.firstName?.[0] || "U"}</span><span><strong>{user?.firstName} {user?.lastName || ""}</strong><small>{user?.role === "FACULTY" ? "Faculty account" : "Student account"}</small></span></div>
+        <div className="dashboard-user"><span className="user-avatar">{user?.firstName?.[0] || "U"}</span><span><strong>{user?.firstName} {user?.lastName || ""}</strong><small>{user?.role === "FACULTY" ? "Faculty account" : "Student account"}</small></span><button type="button" className="refresh-button" onClick={() => { logout(); navigate("/login"); }}>Log out</button></div>
       </header>
       <div className="dashboard-container">
         <section className="dashboard-welcome">
@@ -321,7 +321,7 @@ function StaffDashboard({ user, logout, navigate }) {
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  if (user?.role === "STUDENT" || user?.role === "FACULTY") return <RequesterDashboard user={user} />;
+  if (user?.role === "STUDENT" || user?.role === "FACULTY") return <RequesterDashboard user={user} logout={logout} navigate={navigate} />;
   if (user?.role === "ADMIN") return <AdminDashboard user={user} logout={logout} navigate={navigate} />;
   if (user?.role === "CLEANER") return <CleanerDashboard user={user} logout={logout} navigate={navigate} />;
   return <StaffDashboard user={user} logout={logout} navigate={navigate} />;
