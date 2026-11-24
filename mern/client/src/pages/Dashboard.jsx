@@ -100,6 +100,7 @@ function RequesterDashboard({ user }) {
       const payload = new FormData();
       Object.entries(form).forEach(([key, value]) => { if (value !== "") payload.append(key, value); });
       imageFiles.forEach((file) => payload.append("images", file));
+      if (confirmDuplicate && duplicateMatches.length) payload.append("suspectedDuplicateIds", JSON.stringify(duplicateMatches.map((match) => match.complaintId)));
       await api.post("/complaints", payload, { headers: { "Content-Type": "multipart/form-data" } });
       setForm(emptyForm);
       setImageFiles([]);
