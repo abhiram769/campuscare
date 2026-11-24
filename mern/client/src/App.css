@@ -1,0 +1,46 @@
+.page-shell { max-width: 1240px; margin: 0 auto; padding: 0 56px; }
+.topbar { height: 88px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e6e9df; }
+.brand { display: inline-flex; align-items: center; gap: 10px; font-size: 21px; font-weight: 700; letter-spacing: -.7px; }
+.brand-mark { display: grid; place-items: center; width: 38px; height: 38px; color: #fff; background: #1b5145; border-radius: 12px; }
+.brand-light { color: #6b8c78; font-weight: 500; }
+.phase-label { color: #73857c; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+.hero { display: grid; grid-template-columns: 1.05fr .95fr; align-items: center; gap: 48px; min-height: 440px; padding: 54px 0 48px; }
+.eyebrow { display: inline-flex; align-items: center; gap: 9px; color: #688277; font-size: 10px; font-weight: 700; letter-spacing: .15em; }
+.eyebrow-dot { width: 7px; height: 7px; border-radius: 50%; background: #a4bc83; }
+.hero h1 { margin: 20px 0 18px; font-family: "Playfair Display", serif; font-size: clamp(42px, 5vw, 66px); line-height: 1.08; letter-spacing: -1.8px; }
+.hero h1 em { color: #72927c; font-weight: 600; }
+.hero-copy > p { max-width: 490px; color: #718078; font-size: 15px; line-height: 1.85; }
+.hero-actions { margin-top: 28px; }
+.primary-action { display: inline-flex; padding: 13px 19px; color: white; background: #1b5145; border-radius: 7px; font-size: 13px; font-weight: 600; }
+.hero-art { min-height: 320px; position: relative; overflow: hidden; display: grid; place-items: center; background: #e9eee4; border-radius: 48% 48% 12px 12px; }
+.art-circle { position: absolute; border: 1px solid #b8c9b3; border-radius: 50%; }
+.art-circle-one { width: 260px; height: 260px; }
+.art-circle-two { width: 330px; height: 330px; }
+.art-leaf { display: grid; place-items: center; width: 170px; height: 170px; color: #416f58; background: #d6e2d1; border-radius: 50%; transform: rotate(-24deg); }
+.art-caption { position: absolute; right: 22px; bottom: 20px; color: #60766a; font-family: "Playfair Display", serif; font-size: 14px; font-style: italic; text-align: right; }
+.status-section { padding: 30px 0 54px; border-top: 1px solid #e6e9df; }
+.section-heading { display: flex; align-items: end; justify-content: space-between; margin-bottom: 20px; }
+.section-heading h2 { margin: 7px 0 0; font-family: "Playfair Display", serif; font-size: 27px; }
+.status-pill { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; color: #8a6b35; background: #f4eedf; border-radius: 30px; font-size: 11px; }
+.status-pill span, .check-dot { width: 7px; height: 7px; border-radius: 50%; background: #c69b4d; }
+.status-pill.online { color: #397158; background: #e8f1e9; }
+.status-pill.online span, .check-dot.good { background: #5d9b71; }
+.status-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+.status-card { min-height: 155px; padding: 19px; background: #fff; border: 1px solid #e8ebe4; border-radius: 10px; }
+.card-top { display: flex; align-items: center; justify-content: space-between; }
+.card-icon { display: grid; place-items: center; width: 35px; height: 35px; color: #47735c; background: #edf3eb; border-radius: 9px; }
+.status-card h3 { margin: 15px 0 4px; font-size: 13px; }
+.status-card strong { font-size: 14px; }
+.status-card p { margin: 5px 0 0; color: #87928a; font-size: 11px; overflow-wrap: anywhere; }
+.error-message { color: #a04438; font-size: 12px; }
+.footer { display: flex; justify-content: space-between; padding: 20px 0 28px; color: #87928a; border-top: 1px solid #e6e9df; font-size: 11px; }
+.footer span:first-child { color: #456b58; font-weight: 700; }
+@media (max-width: 760px) {
+  .page-shell { padding: 0 22px; }
+  .topbar { height: 70px; }
+  .phase-label { font-size: 9px; }
+  .hero { grid-template-columns: 1fr; gap: 28px; padding: 45px 0 35px; }
+  .hero-art { min-height: 245px; }
+  .status-grid { grid-template-columns: 1fr; }
+  .footer { gap: 12px; flex-direction: column; }
+}
