@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 import CampusMap from "../components/CampusMap";
+import AnalyticsCharts from "../components/AnalyticsCharts";
 
 const emptyForm = { title: "", description: "", category: "CLEANLINESS", location: "", latitude: "", longitude: "" };
 const statusLabels = {
@@ -133,6 +134,8 @@ function RequesterDashboard({ user, logout, navigate }) {
           <article className="stat-card"><span className="stat-icon stat-open">◷</span><div><small>Open reports</small><strong>{stats.open}</strong></div></article>
           <article className="stat-card"><span className="stat-icon stat-done">✓</span><div><small>Resolved</small><strong>{stats.completed}</strong></div></article>
         </section>
+
+        <AnalyticsCharts mode="requester" complaints={complaints} />
 
         <section className="dashboard-panel campus-overview-panel">
           <div className="panel-heading"><div><span className="dashboard-eyebrow">CAMPUS OVERVIEW</span><h2>3D complaint location map</h2><p>Explore the campus and view GPS locations attached to your reports. Zoom, rotate and tilt the map.</p></div></div>
@@ -379,7 +382,8 @@ function CleanerDashboard({ user, logout, navigate }) {
             <div className="admin-action-row"><button type="button" className="dashboard-submit attendance-action" disabled={attendanceBusy || Boolean(attendance?.checkIn)} onClick={() => markAttendance("check-in")}>Check in</button><button type="button" className="admin-secondary-action" disabled={attendanceBusy || !attendance?.checkIn || Boolean(attendance?.checkOut)} onClick={() => markAttendance("check-out")}>Check out</button></div>
           </>}
         </section>
-        <section className="dashboard-panel admin-queue-panel"><div className="panel-heading reports-heading"><div><span className="dashboard-eyebrow">MY WORK</span><h2>Active assignments</h2></div><button className="refresh-button" onClick={loadTasks} disabled={loading}>↻ Refresh</button></div>
+        <AnalyticsCharts mode="cleaner" tasks={tasks} attendance={attendance} />
+                <section className="dashboard-panel admin-queue-panel"><div className="panel-heading reports-heading"><div><span className="dashboard-eyebrow">MY WORK</span><h2>Active assignments</h2></div><button className="refresh-button" onClick={loadTasks} disabled={loading}>↻ Refresh</button></div>
           {loading ? <div className="empty-state">Loading assigned tasks...</div> : tasks.length === 0 ? <div className="empty-state"><strong>No active tasks assigned</strong><p>New assignments from the administrator will appear here.</p></div> : <div className="admin-assign-list">{tasks.map((task) => <article className="admin-assign-row cleaner-task-row" key={task._id}><div><strong>{task.title}</strong><small>{task.category} · {task.location} · Reported by {task.reporter?.firstName || "Campus user"}</small><p>{task.description}</p><StatusPill status={task.status} />{task.images?.length > 0 && <div className="admin-image-grid">{task.images.map((src, index) => <a href={src} target="_blank" rel="noreferrer" key={src}><img src={src} alt={`Task attachment ${index + 1}`} /></a>)}</div>}
             {task.status === "IN_PROGRESS" && <div className="task-evidence-upload"><label>Upload completion evidence (required) <span>1–5 photos · JPG, PNG or WEBP · 5 MB each</span><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => { const chosen = Array.from(event.target.files || []); if (chosen.length > 5 || chosen.some((file) => file.size > 5 * 1024 * 1024) || chosen.some((file) => !["image/jpeg", "image/png", "image/webp"].includes(file.type))) { setError("Choose up to 5 JPG, PNG or WEBP photos, each no larger than 5 MB."); event.target.value = ""; return; } setError(""); setEvidenceFiles((current) => ({ ...current, [task._id]: chosen })); }} /></label>{(evidenceFiles[task._id] || []).length > 0 && <small>{evidenceFiles[task._id].length} evidence photo(s) selected</small>}<button type="button" className="dashboard-submit" disabled={busyId === task._id} onClick={() => completeWithEvidence(task)}>{busyId === task._id ? "Uploading evidence..." : "Upload evidence & complete task"}</button></div>}
           </div>{nextStep[task.status] && <button className="dashboard-submit" disabled={busyId === task._id} onClick={() => updateStatus(task, nextStep[task.status][0])}>{nextStep[task.status][1]}</button>}</article>)}</div>}
