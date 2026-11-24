@@ -21,6 +21,19 @@ exports.getMyTasks = async (req, res) => {
   }
 };
 
+
+exports.getMyCompletedTasks = async (req, res) => {
+  try {
+    const tasks = await Complaint.find({ assignedTo: req.user._id, status: "COMPLETED" })
+      .populate("reporter", "firstName lastName role")
+      .sort({ resolvedAt: -1, updatedAt: -1 });
+    return res.json({ success: true, count: tasks.length, tasks });
+  } catch (error) {
+    console.error("Cleaner completed task history error:", error);
+    return res.status(500).json({ success: false, message: "Unable to load your completed tasks." });
+  }
+};
+
 exports.updateTaskStatus = async (req, res) => {
   try {
     const allowed = { ACCEPTED: ["ASSIGNED"], IN_PROGRESS: ["ACCEPTED"] };
