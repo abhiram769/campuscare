@@ -280,3 +280,11 @@
 .attendance-chart-summary strong { font-size: 2rem; }
 .attendance-chart-summary span { color: #718078; font-size: .9rem; }
 @media (max-width: 760px) { .analytics-grid { grid-template-columns: 1fr; } .analytics-chart-body { height: 230px; } }
+
+/* Cleaner completed work history */
+.cleaner-history-panel { margin-top: 24px; }
+.cleaner-completed-task { align-items: flex-start; }
+.cleaner-completed-task-main { display: grid; gap: 8px; width: 100%; min-width: 0; }
+.cleaner-completed-task-main > strong { color: #172b25; font-size: 1rem; }
+.cleaner-completed-task-main > small { color: #718078; }
+.cleaner-completed-task-main > p { margin: 0; color: #53665a; }
