@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import maplibregl from "maplibre-gl";
+import maplibregl, { setWorkerUrl } from "maplibre-gl";
+import mapWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
+setWorkerUrl(mapWorkerUrl);
 import "maplibre-gl/dist/maplibre-gl.css";
 
 const CAMPUS_CENTER = [75.9344, 11.3217];
@@ -33,20 +35,21 @@ export default function CampusMap({ complaints = [], interactive = false, select
         const style = map.getStyle();
         const sourceId = style.sources?.openmaptiles ? "openmaptiles" : Object.keys(style.sources || {}).find((key) => style.sources[key].type === "vector");
         if (sourceId && !map.getLayer("campus-care-3d-buildings")) {
+          const firstLabelLayer = map.getStyle().layers?.find((layer) => layer.type === "symbol")?.id;
           map.addLayer({
             id: "campus-care-3d-buildings",
             source: sourceId,
             "source-layer": "building",
             type: "fill-extrusion",
-            minzoom: 14,
+            minzoom: 15,
             filter: ["all", ["!=", ["get", "hide_3d"], true], ["has", "render_height"]],
             paint: {
               "fill-extrusion-color": ["interpolate", ["linear"], ["get", "render_height"], 0, "#dce9df", 30, "#83ad91", 100, "#4c8060"],
-              "fill-extrusion-height": ["coalesce", ["get", "render_height"], 8],
+              "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 15, 0, 16, ["coalesce", ["get", "render_height"], 8]],
               "fill-extrusion-base": ["coalesce", ["get", "render_min_height"], 0],
               "fill-extrusion-opacity": 0.86
             }
-          });
+          }, firstLabelLayer);
         }
       } catch (error) {
         console.warn("3D building layer could not be added:", error);
