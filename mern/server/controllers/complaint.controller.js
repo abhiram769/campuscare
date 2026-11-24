@@ -13,12 +13,21 @@ exports.createComplaint = async (req, res, next) => {
     const uploadedImages = (req.files || []).map((file) => `${serverBaseUrl}/uploads/complaints/${file.filename}`);
     const imageHashes = await Promise.all((req.files || []).map((file) => perceptualHash(file.path)));
     const legacyImages = Array.isArray(images) ? images.slice(0, Math.max(0, 5 - uploadedImages.length)) : [];
+    let suspectedDuplicates = [];
+    if (req.body.suspectedDuplicateIds) {
+      try {
+        const parsed = JSON.parse(req.body.suspectedDuplicateIds);
+        if (Array.isArray(parsed)) suspectedDuplicates = parsed.filter((id) => /^[a-f0-9]{24}$/i.test(String(id))).slice(0, 5);
+      } catch { /* Ignore malformed optional duplicate references. */ }
+    }
     const complaint = await Complaint.create({
       reporter: req.user._id, title, description, category, location,
       latitude: latitude == null || latitude === "" ? undefined : Number(latitude),
       longitude: longitude == null || longitude === "" ? undefined : Number(longitude),
       images: [...uploadedImages, ...legacyImages],
-      imageHashes
+      imageHashes,
+      suspectedDuplicates,
+      duplicateReview: suspectedDuplicates.length ? "PENDING" : "NOT_REQUIRED"
     });
     res.status(201).json({ success: true, message: "Complaint submitted.", complaint });
   } catch (error) {
