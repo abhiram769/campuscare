@@ -12,6 +12,10 @@ const complaintSchema = new mongoose.Schema({
   status: { type: String, enum: ["SUBMITTED", "UNDER_REVIEW", "ASSIGNED", "ACCEPTED", "IN_PROGRESS", "COMPLETED", "DUPLICATE"], default: "SUBMITTED", index: true },
   images: [{ type: String }],
   imageHashes: [{ type: String }],
+  suspectedDuplicates: [{ type: mongoose.Schema.Types.ObjectId, ref: "Complaint" }],
+  duplicateReview: { type: String, enum: ["NOT_REQUIRED", "PENDING", "CONFIRMED", "REJECTED"], default: "NOT_REQUIRED", index: true },
+  duplicateReviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+  duplicateReviewedAt: { type: Date, default: null },
   assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
   resolvedAt: { type: Date, default: null }
 }, { timestamps: true });
