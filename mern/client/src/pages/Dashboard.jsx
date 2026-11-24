@@ -181,6 +181,94 @@ function RequesterDashboard({ user }) {
   );
 }
 
+
+function AdminDashboard({ user, logout, navigate }) {
+  const [complaints, setComplaints] = useState([]);
+  const [cleaners, setCleaners] = useState([]);
+  const [selectedCleaners, setSelectedCleaners] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState("");
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+
+  const loadAdminData = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const [complaintResponse, cleanerResponse] = await Promise.all([
+        api.get("/admin/complaints"),
+        api.get("/admin/cleaners")
+      ]);
+      setComplaints(complaintResponse.data.complaints || []);
+      setCleaners(cleanerResponse.data.cleaners || []);
+    } catch (err) {
+      setError(err.response?.data?.message || "Unable to load the admin review queue.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadAdminData(); }, [loadAdminData]);
+
+  const reviewDuplicate = async (complaintId, decision) => {
+    setBusyId(complaintId); setError(""); setNotice("");
+    try {
+      const response = await api.patch(`/admin/complaints/${complaintId}/duplicate-review`, { decision });
+      setNotice(response.data.message);
+      await loadAdminData();
+    } catch (err) {
+      setError(err.response?.data?.message || "Unable to review this complaint.");
+    } finally { setBusyId(""); }
+  };
+
+  const assignComplaint = async (complaintId) => {
+    const cleanerId = selectedCleaners[complaintId];
+    if (!cleanerId) { setError("Select a cleaner before assigning."); return; }
+    setBusyId(complaintId); setError(""); setNotice("");
+    try {
+      const response = await api.patch(`/admin/complaints/${complaintId}/assign`, { cleanerId });
+      setNotice(response.data.message);
+      await loadAdminData();
+    } catch (err) {
+      setError(err.response?.data?.message || "Unable to assign this complaint.");
+    } finally { setBusyId(""); }
+  };
+
+  const pending = complaints.filter((item) => item.duplicateReview === "PENDING");
+  const assignable = complaints.filter((item) => item.status !== "DUPLICATE" && item.status !== "COMPLETED" && item.duplicateReview !== "PENDING" && item.duplicateReview !== "CONFIRMED");
+
+  return (
+    <main className="dashboard-page">
+      <header className="dashboard-topbar"><Link className="dashboard-brand" to="/"><span className="dashboard-brand-mark">C</span> Campus Care</Link><div className="dashboard-user"><span><strong>{user?.firstName} {user?.lastName || ""}</strong><small>Administrator</small></span><button className="refresh-button" onClick={() => { logout(); navigate("/login"); }}>Log out</button></div></header>
+      <div className="dashboard-container">
+        <section className="dashboard-welcome"><div><span className="dashboard-eyebrow">ADMINISTRATION</span><h1>Complaint review centre</h1><p>Review suspected duplicate reports and assign verified complaints to cleaning staff.</p></div><span className="role-tag">ADMIN</span></section>
+        {error && <div className="dashboard-alert dashboard-alert-error" role="alert">{error}</div>}
+        {notice && <div className="dashboard-alert dashboard-alert-success" role="status">{notice}</div>}
+        <section className="stat-grid">
+          <article className="stat-card"><span className="stat-icon">!</span><div><small>Pending duplicate review</small><strong>{pending.length}</strong></div></article>
+          <article className="stat-card"><span className="stat-icon stat-open">▤</span><div><small>Awaiting assignment</small><strong>{assignable.filter((item) => !item.assignedTo).length}</strong></div></article>
+          <article className="stat-card"><span className="stat-icon stat-done">✓</span><div><small>Active cleaners</small><strong>{cleaners.length}</strong></div></article>
+        </section>
+        <section className="dashboard-panel admin-queue-panel">
+          <div className="panel-heading reports-heading"><div><span className="dashboard-eyebrow">REQUIRES YOUR DECISION</span><h2>Suspected duplicate reports</h2><p>Compare the new report with the reports that triggered the image similarity warning.</p></div><button type="button" className="refresh-button" onClick={loadAdminData} disabled={loading}>↻ Refresh</button></div>
+          {loading ? <div className="empty-state">Loading admin queue...</div> : pending.length === 0 ? <div className="empty-state"><strong>No pending duplicate reviews</strong><p>New reports flagged by image detection will appear here.</p></div> : <div className="admin-complaint-list">{pending.map((item) => <article className="admin-complaint-card" key={item._id}>
+            <div className="complaint-item-top"><span className="complaint-category">{item.category}</span><StatusPill status={item.status} /></div>
+            <h3>{item.title}</h3><p>{item.description}</p><small>Reported by {item.reporter?.firstName || "User"} · {item.location} · {new Date(item.createdAt).toLocaleString()}</small>
+            <div className="admin-image-grid">{(item.images || []).map((src, index) => <a href={src} target="_blank" rel="noreferrer" key={src}><img src={src} alt={`New report photo ${index + 1}`} /></a>)}</div>
+            <h4>Similar existing reports</h4>
+            {(item.suspectedDuplicates || []).map((match) => <div className="admin-match-card" key={match._id}><div><strong>{match.title}</strong><small>{match.location} · {match.status} · {new Date(match.createdAt).toLocaleString()}</small></div><div className="admin-image-grid">{(match.images || []).map((src, index) => <a href={src} target="_blank" rel="noreferrer" key={src}><img src={src} alt={`Existing report photo ${index + 1}`} /></a>)}</div></div>)}
+            <div className="admin-action-row"><button type="button" className="admin-secondary-action" disabled={busyId === item._id} onClick={() => reviewDuplicate(item._id, "CONFIRMED")}>Confirm duplicate</button><button type="button" className="dashboard-submit admin-approve-action" disabled={busyId === item._id} onClick={() => reviewDuplicate(item._id, "REJECTED")}>Not a duplicate — approve</button></div>
+          </article>)}</div>}
+        </section>
+        <section className="dashboard-panel admin-queue-panel">
+          <div className="panel-heading"><div><span className="dashboard-eyebrow">WORK ALLOCATION</span><h2>Assign complaints to cleaners</h2><p>Only reports cleared for assignment are listed here.</p></div></div>
+          {assignable.length === 0 ? <div className="empty-state">No complaints are currently ready for assignment.</div> : <div className="admin-assign-list">{assignable.map((item) => <article className="admin-assign-row" key={item._id}><div><strong>{item.title}</strong><small>{item.location} · {item.status} · {item.assignedTo ? `Assigned to ${item.assignedTo.firstName} ${item.assignedTo.lastName || ""}` : "Unassigned"}</small></div><div className="admin-assign-controls"><select value={selectedCleaners[item._id] || item.assignedTo?._id || ""} onChange={(event) => setSelectedCleaners((current) => ({ ...current, [item._id]: event.target.value }))}><option value="">Select cleaner</option>{cleaners.map((cleaner) => <option key={cleaner._id} value={cleaner._id}>{cleaner.firstName} {cleaner.lastName} ({cleaner.username})</option>)}</select><button type="button" className="dashboard-submit" disabled={busyId === item._id || cleaners.length === 0} onClick={() => assignComplaint(item._id)}>{item.assignedTo ? "Reassign" : "Assign"}</button></div></article>)}</div>}
+        </section>
+      </div>
+    </main>
+  );
+}
+
 function StaffDashboard({ user, logout, navigate }) {
   const isAdmin = user?.role === "ADMIN";
   return (
@@ -198,5 +286,6 @@ export default function Dashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   if (user?.role === "STUDENT" || user?.role === "FACULTY") return <RequesterDashboard user={user} />;
+  if (user?.role === "ADMIN") return <AdminDashboard user={user} logout={logout} navigate={navigate} />;
   return <StaffDashboard user={user} logout={logout} navigate={navigate} />;
 }
