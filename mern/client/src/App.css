@@ -232,3 +232,7 @@
 .admin-assign-controls select { min-width: 190px; padding: 9px; border: 1px solid #d7e1da; border-radius: 8px; background: white; }
 .admin-assign-controls .dashboard-submit { width: auto; margin: 0; }
 @media (max-width: 600px) { .admin-action-row > button { width: 100%; } .admin-assign-controls { width: 100%; } .admin-assign-controls select, .admin-assign-controls .dashboard-submit { flex: 1; min-width: 0; } }
+.cleaner-task-row { align-items: flex-start; }
+.cleaner-task-row > div { flex: 1; min-width: 220px; }
+.cleaner-task-row p { margin: 7px 0; color: #52645a; font-size: 12px; line-height: 1.5; }
+.cleaner-task-row > .dashboard-submit { width: auto; margin: 0; align-self: center; }
