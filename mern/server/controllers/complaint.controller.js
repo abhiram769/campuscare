@@ -1,6 +1,6 @@
 const Complaint = require("../models/Complaint");
 const fs = require("fs");
-const path = require("path");
+const { perceptualHash } = require("../utils/perceptualHash");
 
 exports.createComplaint = async (req, res, next) => {
   try {
@@ -11,12 +11,14 @@ exports.createComplaint = async (req, res, next) => {
     }
     const serverBaseUrl = (process.env.SERVER_PUBLIC_URL || `${req.protocol}://${req.get("host")}`).replace(/\/$/, "");
     const uploadedImages = (req.files || []).map((file) => `${serverBaseUrl}/uploads/complaints/${file.filename}`);
+    const imageHashes = await Promise.all((req.files || []).map((file) => perceptualHash(file.path)));
     const legacyImages = Array.isArray(images) ? images.slice(0, Math.max(0, 5 - uploadedImages.length)) : [];
     const complaint = await Complaint.create({
       reporter: req.user._id, title, description, category, location,
       latitude: latitude == null || latitude === "" ? undefined : Number(latitude),
       longitude: longitude == null || longitude === "" ? undefined : Number(longitude),
-      images: [...uploadedImages, ...legacyImages]
+      images: [...uploadedImages, ...legacyImages],
+      imageHashes
     });
     res.status(201).json({ success: true, message: "Complaint submitted.", complaint });
   } catch (error) {
