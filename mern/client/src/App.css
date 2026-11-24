@@ -210,3 +210,25 @@
 .duplicate-match b { font-size: 12px; }
 .duplicate-match small { margin-top: 4px; color: #806a3e; font-size: 10px; }
 .duplicate-cancel { margin-top: 8px; padding: 7px 10px; border: 1px solid #c6a96a; border-radius: 7px; color: #674c19; background: white; font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; }
+/* Admin duplicate review and cleaner assignment */
+.admin-queue-panel { margin-top: 22px; }
+.admin-complaint-list, .admin-assign-list { display: grid; gap: 14px; }
+.admin-complaint-card { padding: 16px; border: 1px solid #e2ebe5; border-radius: 12px; background: #fbfdfb; }
+.admin-complaint-card h3 { margin: 10px 0 6px; color: #172b25; }
+.admin-complaint-card p { margin: 0 0 8px; color: #52645a; font-size: 13px; }
+.admin-complaint-card > small, .admin-match-card small, .admin-assign-row small { display: block; color: #718078; font-size: 11px; line-height: 1.5; }
+.admin-image-grid { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.admin-image-grid a { display: block; width: 88px; height: 76px; overflow: hidden; border-radius: 7px; }
+.admin-image-grid img { width: 100%; height: 100%; object-fit: cover; }
+.admin-complaint-card h4 { margin: 16px 0 8px; font-size: 13px; color: #176b45; }
+.admin-match-card { padding: 11px; margin-top: 8px; border: 1px solid #e5ece7; border-radius: 9px; background: white; }
+.admin-match-card strong { font-size: 12px; }
+.admin-action-row, .admin-assign-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin-top: 14px; }
+.admin-secondary-action { padding: 10px 13px; border: 1px solid #b9c9bf; border-radius: 8px; background: white; color: #34483d; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.admin-approve-action { width: auto; margin: 0; }
+.admin-assign-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 13px 0; border-bottom: 1px solid #e8eee9; }
+.admin-assign-row strong { display: block; margin-bottom: 4px; font-size: 13px; color: #172b25; }
+.admin-assign-controls { margin: 0; }
+.admin-assign-controls select { min-width: 190px; padding: 9px; border: 1px solid #d7e1da; border-radius: 8px; background: white; }
+.admin-assign-controls .dashboard-submit { width: auto; margin: 0; }
+@media (max-width: 600px) { .admin-action-row > button { width: 100%; } .admin-assign-controls { width: 100%; } .admin-assign-controls select, .admin-assign-controls .dashboard-submit { flex: 1; min-width: 0; } }
