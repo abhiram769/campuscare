@@ -311,6 +311,7 @@ function CleanerDashboard({ user, logout, navigate }) {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState("");
   const [attendanceBusy, setAttendanceBusy] = useState(false);
+  const [currentTime, setCurrentTime] = useState(() => new Date());
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
@@ -330,6 +331,21 @@ function CleanerDashboard({ user, logout, navigate }) {
     finally { setLoading(false); }
   }, []);
   useEffect(() => { loadTasks(); }, [loadTasks]);
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const indiaClock = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23"
+  }).format(currentTime);
+  const checkInWindowOpen = indiaClock >= "08:00:00" && indiaClock <= "17:00:00";
+  const canCheckIn = isWorkingDay && checkInWindowOpen && !attendance?.checkIn;
+  const formatIndiaTime = (value) => value
+    ? new Intl.DateTimeFormat("en-IN", {
+        timeZone: "Asia/Kolkata", hour: "numeric", minute: "2-digit", second: "2-digit", hour12: true
+      }).format(new Date(value))
+    : "—";
 
   const updateStatus = async (task, status) => {
     setBusyId(task._id); setError(""); setNotice("");
@@ -373,10 +389,11 @@ function CleanerDashboard({ user, logout, navigate }) {
         {error && <div className="dashboard-alert dashboard-alert-error" role="alert">{error}</div>}
         {notice && <div className="dashboard-alert dashboard-alert-success" role="status">{notice}</div>}
         <section className="dashboard-panel attendance-panel">
-          <div className="panel-heading"><div><span className="dashboard-eyebrow">DAILY ATTENDANCE</span><h2>Check in and check out</h2><p>Check in by 8:00 AM to be marked present. Any later check-in is marked late.</p></div></div>
+          <div className="panel-heading"><div><span className="dashboard-eyebrow">DAILY ATTENDANCE</span><h2>Check in and check out</h2><p>Check-in opens at 8:00 AM IST. Exactly 8:00 AM is PRESENT; any later check-in is LATE (no grace period).</p></div></div>
           {!isWorkingDay ? <div className="empty-state"><strong>Today is a non-working day</strong><p>Attendance is scheduled Monday through Saturday.</p></div> : <>
-            <div className="attendance-summary"><span><strong>Duty</strong> 8:00 AM – 5:00 PM</span><span><strong>Status</strong> {attendance?.status || "Not checked in"}</span><span><strong>Check-in</strong> {attendance?.checkIn ? new Date(attendance.checkIn).toLocaleTimeString() : "—"}</span><span><strong>Check-out</strong> {attendance?.checkOut ? new Date(attendance.checkOut).toLocaleTimeString() : "—"}</span></div>
-            <div className="admin-action-row"><button type="button" className="dashboard-submit attendance-action" disabled={attendanceBusy || Boolean(attendance?.checkIn)} onClick={() => markAttendance("check-in")}>Check in</button><button type="button" className="admin-secondary-action" disabled={attendanceBusy || !attendance?.checkIn || Boolean(attendance?.checkOut)} onClick={() => markAttendance("check-out")}>Check out</button></div>
+            <div className="attendance-summary"><span><strong>Duty</strong> 8:00 AM – 5:00 PM (IST)</span><span><strong>Status</strong> {attendance?.status || "Not checked in"}</span><span><strong>Check-in</strong> {formatIndiaTime(attendance?.checkIn)}</span><span><strong>Check-out</strong> {formatIndiaTime(attendance?.checkOut)}</span></div>
+            <div className="admin-action-row"><button type="button" className="dashboard-submit attendance-action" disabled={attendanceBusy || !canCheckIn} onClick={() => markAttendance("check-in")}>Check in</button><button type="button" className="admin-secondary-action" disabled={attendanceBusy || !attendance?.checkIn || Boolean(attendance?.checkOut)} onClick={() => markAttendance("check-out")}>Check out</button></div>
+            {!attendance?.checkIn && <p className="muted-note">{!checkInWindowOpen ? (indiaClock < "08:00:00" ? "Check-in becomes available at 8:00 AM IST." : "The check-in window closed at 5:00 PM IST.") : "You can check in now. Attendance is marked PRESENT at exactly 8:00 AM; later check-ins are LATE."}</p>}
           </>}
         </section>
                 <section className="dashboard-panel admin-queue-panel"><div className="panel-heading reports-heading"><div><span className="dashboard-eyebrow">MY WORK</span><h2>Active assignments</h2></div><button className="refresh-button" onClick={loadTasks} disabled={loading}>↻ Refresh</button></div>
