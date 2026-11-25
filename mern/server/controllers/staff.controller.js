@@ -69,14 +69,14 @@ exports.checkIn = async (req, res) => {
     const parts = campusDateParts(now);
     if (parts.weekday === "Sunday") return res.status(400).json({ success: false, message: "Sunday is not a scheduled working day." });
     const date = parts.year + "-" + parts.month + "-" + parts.day;
-    const localClock = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(now);
-    if (localClock < "08:00") {
+    const localClock = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" }).format(now);
+    if (localClock < "08:00:00") {
       return res.status(400).json({ success: false, message: "Check-in opens at 8:00 AM. You cannot record attendance before duty starts." });
     }
-    if (localClock > "17:00") {
+    if (localClock > "17:00:00") {
       return res.status(400).json({ success: false, message: "The 5:00 PM duty window has ended. Check-in is closed for today." });
     }
-    const isLate = localClock > "08:00";
+    const isLate = localClock > "08:00:00";
     const existing = await Attendance.findOne({ cleaner: req.user._id, date });
     if (existing?.checkIn) return res.status(409).json({ success: false, message: "You have already checked in today.", attendance: existing });
     const attendance = existing || new Attendance({ cleaner: req.user._id, date });
