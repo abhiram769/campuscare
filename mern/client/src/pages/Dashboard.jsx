@@ -170,10 +170,7 @@ function RequesterDashboard({ user, logout, navigate }) {
             </form>
           </section>
 
-          <section className="dashboard-panel reports-panel">
-            <div className="panel-heading reports-heading"><div><span className="dashboard-eyebrow">YOUR ACTIVITY</span><h2>Recent complaints</h2><p>Track the latest updates to your reports.</p></div><button type="button" className="refresh-button" onClick={loadDashboard} disabled={loading}>↻ Refresh</button></div>
-            {loading ? <div className="empty-state">Loading your complaints...</div> : complaints.length === 0 ? <div className="empty-state"><span className="empty-icon">▤</span><strong>No complaints yet</strong><p>When you submit a campus issue, it will appear here.</p></div> : <div className="complaint-list">{complaints.map((item) => <article className="complaint-item" key={item._id}><div className="complaint-item-top"><span className="complaint-category">{String(item.category || "").replaceAll("_", " ")}</span><StatusPill status={item.status} /></div><h3>{item.title}</h3><p>{item.location}</p>{Array.isArray(item.images) && item.images.length > 0 && <div className="complaint-image-strip">{item.images.map((src, index) => <a href={src} target="_blank" rel="noreferrer" key={src}><img src={src} alt={"Complaint attachment " + (index + 1)} loading="lazy" /></a>)}</div>}<small>{new Date(item.createdAt).toLocaleString()}</small></article>)}</div>}
-          </section>
+
         </div>
         <footer className="dashboard-footer">Campus Care · A cleaner, safer campus starts with you.</footer>
       </div>
