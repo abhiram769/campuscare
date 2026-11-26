@@ -319,6 +319,18 @@
   font-size: 0.84rem;
 }
 
+.recent-complaint-location {
+  margin: 0 0 8px;
+  color: var(--muted-color, #6b7280);
+  font-size: 0.9rem;
+}
+
+.recent-complaint-date {
+  display: block;
+  color: var(--muted-color, #6b7280);
+  font-size: 0.8rem;
+}
+
 @media (max-width: 640px) {
   .recent-complaint-card {
     padding: 14px;
@@ -330,7 +342,11 @@
   }
 }
 
-
+@media (min-width: 700px) {
+  .recent-complaints-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 .recent-complaint-location {
   margin: 0 0 8px;
   color: var(--muted-color, #6b7280);
