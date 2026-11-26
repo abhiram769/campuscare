@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-
+const ROLL_NUMBER_REGEX = /^m260\d{5}$/i;
 const Register = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -31,10 +31,26 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+const username = form.username.trim().toLowerCase();
+const email = form.email.trim().toLowerCase();
+
+if (!ROLL_NUMBER_REGEX.test(username)) {
+  setError("Username must be your NITC roll number (example: m26012345).");
+  return;
+}
+
+if (email !== `${username}@nitc.ac.in`) {
+  setError("Use your NITC email matching your roll number.");
+  return;
+}
     setLoading(true);
 
     try {
-      const user = await register(form);
+      const user = await register({
+  ...form,
+  username,
+  email,
+});
       navigate(user.role === "FACULTY" ? "/faculty/dashboard" : "/student/dashboard");
     } catch (err) {
       setError(
