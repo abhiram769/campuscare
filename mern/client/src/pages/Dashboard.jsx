@@ -249,6 +249,7 @@ function AdminDashboard({ user, logout, navigate }) {
   const [notice, setNotice] = useState("");
   const [cleanerForm, setCleanerForm] = useState({ username: "", firstName: "", lastName: "", email: "", password: "", department: "", phone: "" });
   const [creatingCleaner, setCreatingCleaner] = useState(false);
+  const [currentTime, setCurrentTime] = useState(() => new Date());
 
   const loadAdminData = useCallback(async () => {
     setLoading(true);
@@ -268,6 +269,10 @@ function AdminDashboard({ user, logout, navigate }) {
   }, []);
 
   useEffect(() => { loadAdminData(); }, [loadAdminData]);
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 30000);
+    return () => clearInterval(timer);
+  }, []);
 
   const createCleaner = async (event) => {
     event.preventDefault();
@@ -297,7 +302,8 @@ function AdminDashboard({ user, logout, navigate }) {
 
   const assignComplaint = async (complaintId) => {
     const cleanerId = selectedCleaners[complaintId];
-    if (!cleanerId) { setError("Select a cleaner before assigning."); return; }
+    if (!assignmentWindowOpen) { setError("Work assignment is closed after 5:00 PM IST."); return; }
+    if (!cleanerId) { setError("Select an online cleaner with fewer than 5 active assignments."); return; }
     setBusyId(complaintId); setError(""); setNotice("");
     try {
       const response = await api.patch(`/admin/complaints/${complaintId}/assign`, { cleanerId });
@@ -310,6 +316,12 @@ function AdminDashboard({ user, logout, navigate }) {
 
   const pending = complaints.filter((item) => item.duplicateReview === "PENDING");
   const assignable = complaints.filter((item) => item.status !== "DUPLICATE" && item.status !== "COMPLETED" && item.duplicateReview !== "PENDING" && item.duplicateReview !== "CONFIRMED");
+  const onlineCleaners = cleaners.filter((cleaner) => cleaner.isOnline);
+  const eligibleCleaners = cleaners.filter((cleaner) => cleaner.canAcceptWork);
+  const adminClock = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23"
+  }).format(currentTime);
+  const assignmentWindowOpen = adminClock < "17:00:00";
 
   return (
     <main className="dashboard-page">
@@ -321,7 +333,8 @@ function AdminDashboard({ user, logout, navigate }) {
         <section className="stat-grid">
           <article className="stat-card"><span className="stat-icon">!</span><div><small>Pending duplicate review</small><strong>{pending.length}</strong></div></article>
           <article className="stat-card"><span className="stat-icon stat-open">▤</span><div><small>Awaiting assignment</small><strong>{assignable.filter((item) => !item.assignedTo).length}</strong></div></article>
-          <article className="stat-card"><span className="stat-icon stat-done">✓</span><div><small>Active cleaners</small><strong>{cleaners.length}</strong></div></article>
+          <article className="stat-card"><span className="stat-icon stat-done">●</span><div><small>Online cleaners</small><strong>{onlineCleaners.length}</strong></div></article>
+          <article className="stat-card"><span className="stat-icon">▣</span><div><small>Active cleaner accounts</small><strong>{cleaners.length}</strong></div></article>
         </section>
         <section className="dashboard-panel admin-queue-panel">
           <div className="panel-heading"><div><span className="dashboard-eyebrow">STAFF MANAGEMENT</span><h2>Create cleaner account</h2><p>Create login credentials for a cleaning staff member. Share the username and temporary password with them securely.</p></div></div>
@@ -335,7 +348,13 @@ function AdminDashboard({ user, logout, navigate }) {
             <label>Phone<input value={cleanerForm.phone} onChange={(event) => setCleanerForm((current) => ({ ...current, phone: event.target.value }))} placeholder="Optional contact number" /></label>
             <button type="submit" className="dashboard-submit" disabled={creatingCleaner}>{creatingCleaner ? "Creating account..." : "Create cleaner account"}</button>
           </form>
-          <div className="cleaner-directory"><strong>Active cleaner accounts ({cleaners.length})</strong>{cleaners.length === 0 ? <p>No active cleaners yet.</p> : <ul>{cleaners.map((cleaner) => <li key={cleaner._id}>{cleaner.firstName} {cleaner.lastName || ""} <span>@{cleaner.username}</span></li>)}</ul>}</div>
+          <div className="cleaner-directory">
+            <strong>Cleaner availability · {onlineCleaners.length} online</strong>
+            {cleaners.length === 0 ? <p>No active cleaners yet.</p> : <ul>{cleaners.map((cleaner) => <li key={cleaner._id}>
+              {cleaner.firstName} {cleaner.lastName || ""} <span>@{cleaner.username}</span>
+              <span>{cleaner.isOnline ? "Online" : cleaner.checkedOut ? "Checked out" : "Not checked in"} · {cleaner.activeAssignments || 0}/5 active tasks</span>
+            </li>)}</ul>}
+          </div>
         </section>
         <section className="dashboard-panel admin-queue-panel">
           <div className="panel-heading reports-heading"><div><span className="dashboard-eyebrow">REQUIRES YOUR DECISION</span><h2>Suspected duplicate reports</h2><p>Compare the new report with the reports that triggered the image similarity warning.</p></div><button type="button" className="refresh-button" onClick={loadAdminData} disabled={loading}>↻ Refresh</button></div>
@@ -350,7 +369,14 @@ function AdminDashboard({ user, logout, navigate }) {
         </section>
         <section className="dashboard-panel admin-queue-panel">
           <div className="panel-heading"><div><span className="dashboard-eyebrow">WORK ALLOCATION</span><h2>Assign complaints to cleaners</h2><p>Only reports cleared for assignment are listed here.</p></div></div>
-          {assignable.length === 0 ? <div className="empty-state">No complaints are currently ready for assignment.</div> : <div className="admin-assign-list">{assignable.map((item) => <article className="admin-assign-row" key={item._id}><div><strong>{item.title}</strong><small>{item.location} · {item.status} · {item.assignedTo ? `Assigned to ${item.assignedTo.firstName} ${item.assignedTo.lastName || ""}` : "Unassigned"}</small>{item.completionEvidence?.length > 0 && <div className="admin-image-grid completion-evidence-grid">{item.completionEvidence.map((src, index) => <a href={src} target="_blank" rel="noreferrer" key={src}><img src={src} alt={`Completion evidence ${index + 1}`} /></a>)}</div>}</div><div className="admin-assign-controls"><select value={selectedCleaners[item._id] || item.assignedTo?._id || ""} onChange={(event) => setSelectedCleaners((current) => ({ ...current, [item._id]: event.target.value }))}><option value="">Select cleaner</option>{cleaners.map((cleaner) => <option key={cleaner._id} value={cleaner._id}>{cleaner.firstName} {cleaner.lastName} ({cleaner.username})</option>)}</select><button type="button" className="dashboard-submit" disabled={busyId === item._id || cleaners.length === 0} onClick={() => assignComplaint(item._id)}>{item.assignedTo ? "Reassign" : "Assign"}</button></div></article>)}</div>}
+          {assignable.length === 0 ? <div className="empty-state">No complaints are currently ready for assignment.</div> : <div className="admin-assign-list">{assignable.map((item) => <article className="admin-assign-row" key={item._id}><div><strong>{item.title}</strong><small>{item.location} · {item.status} · {item.assignedTo ? `Assigned to ${item.assignedTo.firstName} ${item.assignedTo.lastName || ""}` : "Unassigned"}</small>{item.completionEvidence?.length > 0 && <div className="admin-image-grid completion-evidence-grid">{item.completionEvidence.map((src, index) => <a href={src} target="_blank" rel="noreferrer" key={src}><img src={src} alt={`Completion evidence ${index + 1}`} /></a>)}</div>}</div><div className="admin-assign-controls">
+            <select value={selectedCleaners[item._id] || (eligibleCleaners.some((cleaner) => cleaner._id === item.assignedTo?._id) ? item.assignedTo?._id : "")} onChange={(event) => setSelectedCleaners((current) => ({ ...current, [item._id]: event.target.value }))}>
+              <option value="">Select checked-in cleaner</option>
+              {eligibleCleaners.map((cleaner) => <option key={cleaner._id} value={cleaner._id}>{cleaner.firstName} {cleaner.lastName || ""} (@{cleaner.username}) · {cleaner.activeAssignments}/5 tasks</option>)}
+            </select>
+            <button type="button" className="dashboard-submit" disabled={busyId === item._id || !assignmentWindowOpen || eligibleCleaners.length === 0} onClick={() => assignComplaint(item._id)}>{item.assignedTo ? "Reassign" : "Assign"}</button>
+            {!assignmentWindowOpen ? <small>Assignment closes at 5:00 PM IST.</small> : eligibleCleaners.length === 0 ? <small>No checked-in cleaner has capacity (maximum 5 active tasks).</small> : <small>Only checked-in cleaners with fewer than 5 active tasks can be assigned.</small>}
+          </div></article>)}</div>}
         </section>
         <section className="dashboard-panel admin-queue-panel">
           <div className="panel-heading"><div><span className="dashboard-eyebrow">WORK VERIFICATION</span><h2>Completed tasks and evidence</h2><p>Review photos uploaded by cleaners when they finish their assigned work.</p></div></div>
