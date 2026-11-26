@@ -288,3 +288,63 @@
 .cleaner-completed-task-main > strong { color: #172b25; font-size: 1rem; }
 .cleaner-completed-task-main > small { color: #718078; }
 .cleaner-completed-task-main > p { margin: 0; color: #53665a; }
+/* Recent Complaints section — Student and Faculty dashboards */
+.recent-complaints-panel {
+  margin-bottom: 24px;
+}
+
+.recent-complaints-list {
+  display: grid;
+  gap: 12px;
+}
+
+.recent-complaint-card {
+  padding: 16px 18px;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 12px;
+  background: var(--card-background, #fff);
+}
+
+.recent-complaint-card h3 {
+  margin: 10px 0 8px;
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.recent-complaint-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  color: var(--muted-text, #6b7280);
+  font-size: 0.84rem;
+}
+
+@media (max-width: 640px) {
+  .recent-complaint-card {
+    padding: 14px;
+  }
+
+  .recent-complaint-meta {
+    flex-direction: column;
+    gap: 5px;
+  }
+}
+
+
+.recent-complaint-location {
+  margin: 0 0 8px;
+  color: var(--muted-color, #6b7280);
+  font-size: 0.9rem;
+}
+
+.recent-complaint-date {
+  display: block;
+  color: var(--muted-color, #6b7280);
+  font-size: 0.8rem;
+}
+
+@media (min-width: 700px) {
+  .recent-complaints-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
