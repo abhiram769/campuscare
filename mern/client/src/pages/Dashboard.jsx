@@ -140,63 +140,65 @@ function RequesterDashboard({ user, logout, navigate }) {
           <p className="map-footnote">Only complaints with saved GPS coordinates appear as markers. Building detail depends on available OpenStreetMap data.</p>
         </section>
 
-        {user?.role === "STUDENT" && (
+        {(user?.role === "STUDENT" || user?.role === "FACULTY") && (
           <section className="dashboard-panel recent-complaints-panel">
-          <div className="panel-heading reports-heading">
-            <div>
-              <span className="dashboard-eyebrow">YOUR ACTIVITY</span>
-              <h2>Recent Complaints</h2>
-              <p>Track the latest campus issues you have reported.</p>
+            <div className="panel-heading reports-heading">
+              <div>
+                <span className="dashboard-eyebrow">YOUR REPORTS</span>
+                <h2>Recent Complaints</h2>
+                <p>Track the latest campus issues you have reported.</p>
+              </div>
+              <button
+                type="button"
+                className="refresh-button"
+                onClick={loadDashboard}
+                disabled={loading}
+              >
+                {loading ? "Refreshing..." : "↻ Refresh"}
+              </button>
             </div>
-            <button
-              type="button"
-              className="refresh-button"
-              onClick={loadDashboard}
-              disabled={loading}
-            >
-              {loading ? "Refreshing..." : "↻ Refresh"}
-            </button>
-          </div>
 
-          {loading ? (
-            <div className="empty-state">Loading your recent complaints...</div>
-          ) : complaints.length === 0 ? (
-            <div className="empty-state">
-              <strong>No complaints yet</strong>
-              <p>Your submitted complaints will appear here.</p>
-            </div>
-          ) : (
-            <div className="recent-complaints-list">
-              {complaints.slice(0, 5).map((complaint) => (
-                <article className="recent-complaint-card" key={complaint._id}>
-                  <div className="complaint-item-top">
-                    <span className="complaint-category">
-                      {String(complaint.category || "OTHER").replaceAll("_", " ")}
-                    </span>
-                    <StatusPill status={complaint.status} />
-                  </div>
-
-                  <h3>{complaint.title || "Untitled complaint"}</h3>
-                  <p className="recent-complaint-location">
-                    {complaint.location || "Location not provided"}
-                  </p>
-
-                  <small className="recent-complaint-date">
-                    Submitted{" "}
-                    {complaint.createdAt
-                      ? new Date(complaint.createdAt).toLocaleDateString("en-IN", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric"
-                        })
-                      : "Date unavailable"}
-                  </small>
-                </article>
-              ))}
-            </div>
-          )}
+            {loading ? (
+              <div className="empty-state">Loading your recent complaints...</div>
+            ) : complaints.length === 0 ? (
+              <div className="empty-state">
+                <strong>No complaints submitted yet</strong>
+                <p>Your submitted complaints will appear here.</p>
+              </div>
+            ) : (
+              <div className="recent-complaints-list">
+                {[...complaints]
+                  .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+                  .slice(0, 5)
+                  .map((complaint) => (
+                    <article className="recent-complaint-card" key={complaint._id}>
+                      <div className="complaint-item-top">
+                        <span className="complaint-category">
+                          {String(complaint.category || "OTHER").replaceAll("_", " ")}
+                        </span>
+                        <StatusPill status={complaint.status} />
+                      </div>
+                      <h3>{complaint.title || "Untitled complaint"}</h3>
+                      <div className="recent-complaint-meta">
+                        <span>⌖ {complaint.location || "Location not provided"}</span>
+                        <span>
+                          Submitted{" "}
+                          {complaint.createdAt
+                            ? new Date(complaint.createdAt).toLocaleDateString("en-IN", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric"
+                              })
+                            : "Date unavailable"}
+                        </span>
+                      </div>
+                    </article>
+                  ))}
+              </div>
+            )}
           </section>
         )}
+
 
         <div className="dashboard-content-grid">
           <section className="dashboard-panel">
@@ -397,7 +399,7 @@ function CleanerDashboard({ user, logout, navigate }) {
   const indiaClock = new Intl.DateTimeFormat("en-GB", {
     timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23"
   }).format(currentTime);
-  const checkInWindowOpen = indiaClock >= "08:00:00" && indiaClock <= "17:00:00";
+  const checkInWindowOpen = indiaClock >= "07:00:00" && indiaClock <= "15:00:00";
   const canCheckIn = isWorkingDay && checkInWindowOpen && !attendance?.checkIn;
   const formatIndiaTime = (value) => value
     ? new Intl.DateTimeFormat("en-IN", {
@@ -443,15 +445,15 @@ function CleanerDashboard({ user, logout, navigate }) {
     <main className="dashboard-page">
       <header className="dashboard-topbar"><Link className="dashboard-brand" to="/"><span className="dashboard-brand-mark">C</span> Campus Care</Link><div className="dashboard-user"><span><strong>{user?.firstName} {user?.lastName || ""}</strong><small>Cleaning staff</small></span><button className="refresh-button" onClick={() => { logout(); navigate("/login"); }}>Log out</button></div></header>
       <div className="dashboard-container">
-        <section className="dashboard-welcome"><div><span className="dashboard-eyebrow">CLEANING TEAM</span><h1>Your assigned tasks</h1><p>Duty hours: 8:00 AM–5:00 PM · Monday–Saturday · No grace period.</p></div><span className="role-tag">CLEANER</span></section>
+        <section className="dashboard-welcome"><div><span className="dashboard-eyebrow">CLEANING TEAM</span><h1>Your assigned tasks</h1><p>Duty hours: 7:00 AM–3:00 PM · Monday–Saturday · 30-minute late grace period.</p></div><span className="role-tag">CLEANER</span></section>
         {error && <div className="dashboard-alert dashboard-alert-error" role="alert">{error}</div>}
         {notice && <div className="dashboard-alert dashboard-alert-success" role="status">{notice}</div>}
         <section className="dashboard-panel attendance-panel">
-          <div className="panel-heading"><div><span className="dashboard-eyebrow">DAILY ATTENDANCE</span><h2>Check in and check out</h2><p>Check-in opens at 8:00 AM IST. Exactly 8:00 AM is PRESENT; any later check-in is LATE (no grace period).</p></div></div>
+          <div className="panel-heading"><div><span className="dashboard-eyebrow">DAILY ATTENDANCE</span><h2>Check in and check out</h2><p>Check-in opens at 7:00 AM IST. Check in by 7:30 AM to be marked PRESENT; check-ins after 7:30 AM are marked LATE.</p></div></div>
           {!isWorkingDay ? <div className="empty-state"><strong>Today is a non-working day</strong><p>Attendance is scheduled Monday through Saturday.</p></div> : <>
-            <div className="attendance-summary"><span><strong>Duty</strong> 8:00 AM – 5:00 PM (IST)</span><span><strong>Status</strong> {attendance?.status || "Not checked in"}</span><span><strong>Check-in</strong> {formatIndiaTime(attendance?.checkIn)}</span><span><strong>Check-out</strong> {formatIndiaTime(attendance?.checkOut)}</span></div>
+            <div className="attendance-summary"><span><strong>Duty</strong> 7:00 AM – 3:00 PM (IST)</span><span><strong>Status</strong> {attendance?.status || "Not checked in"}</span><span><strong>Check-in</strong> {formatIndiaTime(attendance?.checkIn)}</span><span><strong>Check-out</strong> {formatIndiaTime(attendance?.checkOut)}</span></div>
             <div className="admin-action-row"><button type="button" className="dashboard-submit attendance-action" disabled={attendanceBusy || !canCheckIn} onClick={() => markAttendance("check-in")}>Check in</button><button type="button" className="admin-secondary-action" disabled={attendanceBusy || !attendance?.checkIn || Boolean(attendance?.checkOut)} onClick={() => markAttendance("check-out")}>Check out</button></div>
-            {!attendance?.checkIn && <p className="muted-note">{!checkInWindowOpen ? (indiaClock < "08:00:00" ? "Check-in becomes available at 8:00 AM IST." : "The check-in window closed at 5:00 PM IST.") : "You can check in now. Attendance is marked PRESENT at exactly 8:00 AM; later check-ins are LATE."}</p>}
+            {!attendance?.checkIn && <p className="muted-note">{!checkInWindowOpen ? (indiaClock < "07:00:00" ? "Check-in becomes available at 7:00 AM IST." : "The check-in window closed at 3:00 PM IST.") : (indiaClock <= "07:30:00" ? "You can check in now and be marked PRESENT." : "You can still check in, but check-ins after 7:30 AM are marked LATE.")}</p>}
           </>}
         </section>
                 <section className="dashboard-panel admin-queue-panel"><div className="panel-heading reports-heading"><div><span className="dashboard-eyebrow">MY WORK</span><h2>Active assignments</h2></div><button className="refresh-button" onClick={loadTasks} disabled={loading}>↻ Refresh</button></div>

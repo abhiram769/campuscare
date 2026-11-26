@@ -3,6 +3,9 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
+const ROLL_NUMBER_REGEX = /^m260\d{3}cs$/i;
+const LAST_NAME_REGEX = /^[a-z]+$/i;
+
 const Register = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -31,11 +34,64 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    const username = form.username.trim().toLowerCase();
+    const firstName = form.firstName.trim();
+    const lastName = form.lastName.trim().toLowerCase();
+    const email = form.email.trim().toLowerCase();
+
+    if (!ROLL_NUMBER_REGEX.test(username)) {
+      setError(
+        "Username must follow the format m260587cs (m260 + 3 digits + cs)."
+      );
+      return;
+    }
+
+    if (!lastName) {
+      setError("Last name is required.");
+      return;
+    }
+
+    if (!LAST_NAME_REGEX.test(lastName)) {
+      setError("Last name must contain letters only.");
+      return;
+    }
+
+    const expectedEmail = `${lastName}_${username}@nitc.ac.in`;
+
+    if (email !== expectedEmail) {
+      setError(
+        `Use your NITC email in this format: ${expectedEmail}`
+      );
+      return;
+    }
+
+    if (!firstName) {
+      setError("First name is required.");
+      return;
+    }
+
+    if (form.password.length < 8) {
+      setError("Password must contain at least 8 characters.");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const user = await register(form);
-      navigate(user.role === "FACULTY" ? "/faculty/dashboard" : "/student/dashboard");
+      const user = await register({
+        ...form,
+        username,
+        firstName,
+        lastName,
+        email,
+      });
+
+      navigate(
+        user.role === "FACULTY"
+          ? "/faculty/dashboard"
+          : "/student/dashboard"
+      );
     } catch (err) {
       setError(
         err.response?.data?.message ||
@@ -74,9 +130,11 @@ const Register = () => {
             name="username"
             value={form.username}
             onChange={handleChange}
-            placeholder="Choose username"
+            placeholder="Example: m260587cs"
+            pattern="m260[0-9]{3}cs"
+            title="Use m260 followed by exactly 3 digits and cs."
+            maxLength={9}
             required
-            minLength={3}
           />
 
           <label>First Name</label>
@@ -93,7 +151,10 @@ const Register = () => {
             name="lastName"
             value={form.lastName}
             onChange={handleChange}
-            placeholder="Last name"
+            placeholder="Example: kumar"
+            pattern="[A-Za-z]+"
+            title="Last name must contain letters only."
+            required
           />
 
           <label>Email</label>
@@ -102,7 +163,7 @@ const Register = () => {
             name="email"
             value={form.email}
             onChange={handleChange}
-            placeholder="Email address"
+            placeholder="kumar_m260587cs@nitc.ac.in"
             required
           />
 

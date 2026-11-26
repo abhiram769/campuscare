@@ -288,8 +288,7 @@
 .cleaner-completed-task-main > strong { color: #172b25; font-size: 1rem; }
 .cleaner-completed-task-main > small { color: #718078; }
 .cleaner-completed-task-main > p { margin: 0; color: #53665a; }
-/* Recent Complaints section — add to mern/client/src/App.css */
-
+/* Recent Complaints section — Student and Faculty dashboards */
 .recent-complaints-panel {
   margin-bottom: 24px;
 }
@@ -300,16 +299,24 @@
 }
 
 .recent-complaint-card {
-  padding: 16px;
+  padding: 16px 18px;
   border: 1px solid var(--border-color, #e5e7eb);
   border-radius: 12px;
   background: var(--card-background, #fff);
 }
 
 .recent-complaint-card h3 {
-  margin: 10px 0 6px;
+  margin: 10px 0 8px;
   font-size: 1rem;
   font-weight: 650;
+}
+
+.recent-complaint-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  color: var(--muted-text, #6b7280);
+  font-size: 0.84rem;
 }
 
 .recent-complaint-location {
@@ -322,6 +329,17 @@
   display: block;
   color: var(--muted-color, #6b7280);
   font-size: 0.8rem;
+}
+
+@media (max-width: 640px) {
+  .recent-complaint-card {
+    padding: 14px;
+  }
+
+  .recent-complaint-meta {
+    flex-direction: column;
+    gap: 5px;
+  }
 }
 
 @media (min-width: 700px) {
