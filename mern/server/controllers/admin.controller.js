@@ -2,6 +2,20 @@
 const mongoose = require("mongoose");
 const User = require("../models/User");
 const Complaint = require("../models/Complaint");
+const Attendance = require("../models/Attendance");
+
+const campusDateParts = (date = new Date()) => {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit", weekday: "long"
+  }).formatToParts(date);
+  return Object.fromEntries(parts.map((part) => [part.type, part.value]));
+};
+
+const campusClock = (date = new Date()) => new Intl.DateTimeFormat("en-GB", {
+  timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23"
+}).format(date);
+
+const campusDateKey = (parts) => `${parts.year}-${parts.month}-${parts.day}`;
 
 // Remove password from API responses
 const formatUser = (user) => ({
@@ -236,12 +250,50 @@ const getComplaintsForAdmin = async (req, res) => {
 
 const getActiveCleaners = async (req, res) => {
   try {
+    const now = new Date();
+    const parts = campusDateParts(now);
+    const clock = campusClock(now);
+    const date = campusDateKey(parts);
+    const isWorkingDay = parts.weekday !== "Sunday";
+    const assignmentWindowOpen = isWorkingDay && clock < "17:00:00";
     const cleaners = await User.find({ role: "CLEANER", isActive: true })
       .select("firstName lastName username department")
       .sort({ firstName: 1 });
-    return res.status(200).json({ success: true, cleaners });
+
+    const cleanerIds = cleaners.map((cleaner) => cleaner._id);
+    const [attendanceRows, workloadRows] = await Promise.all([
+      Attendance.find({ cleaner: { $in: cleanerIds }, date }).select("cleaner checkIn checkOut"),
+      Complaint.aggregate([
+        { $match: { assignedTo: { $in: cleanerIds }, status: { $nin: ["COMPLETED", "DUPLICATE"] } } },
+        { $group: { _id: "$assignedTo", count: { $sum: 1 } } }
+      ])
+    ]);
+    const attendanceByCleaner = new Map(attendanceRows.map((row) => [String(row.cleaner), row]));
+    const workloadByCleaner = new Map(workloadRows.map((row) => [String(row._id), row.count]));
+
+    const results = cleaners.map((cleaner) => {
+      const attendance = attendanceByCleaner.get(String(cleaner._id));
+      const activeAssignments = workloadByCleaner.get(String(cleaner._id)) || 0;
+      const isOnline = Boolean(isWorkingDay && assignmentWindowOpen && attendance?.checkIn && !attendance?.checkOut);
+      return {
+        ...cleaner.toObject(),
+        checkedInToday: Boolean(attendance?.checkIn),
+        checkedOut: Boolean(attendance?.checkOut),
+        isOnline,
+        activeAssignments,
+        canAcceptWork: isOnline && activeAssignments < 5
+      };
+    });
+    return res.status(200).json({
+      success: true,
+      cleaners: results,
+      onlineCount: results.filter((cleaner) => cleaner.isOnline).length,
+      assignmentWindowOpen,
+      serverTime: now.toISOString()
+    });
   } catch (error) {
-    return res.status(500).json({ success: false, message: "Unable to retrieve cleaners." });
+    console.error("Get cleaner availability error:", error);
+    return res.status(500).json({ success: false, message: "Unable to retrieve cleaner availability." });
   }
 };
 
@@ -283,6 +335,17 @@ const assignComplaint = async (req, res) => {
     if (!mongoose.isValidObjectId(req.params.id) || !mongoose.isValidObjectId(cleanerId)) {
       return res.status(400).json({ success: false, message: "Invalid complaint or cleaner ID." });
     }
+
+    const now = new Date();
+    const parts = campusDateParts(now);
+    const clock = campusClock(now);
+    if (parts.weekday === "Sunday") {
+      return res.status(403).json({ success: false, message: "Work cannot be assigned on Sunday." });
+    }
+    if (clock >= "17:00:00") {
+      return res.status(403).json({ success: false, message: "Work assignment is closed after 5:00 PM IST." });
+    }
+
     const [complaint, cleaner] = await Promise.all([
       Complaint.findById(req.params.id),
       User.findOne({ _id: cleanerId, role: "CLEANER", isActive: true })
@@ -295,11 +358,26 @@ const assignComplaint = async (req, res) => {
     if (complaint.status === "COMPLETED") {
       return res.status(409).json({ success: false, message: "Completed complaints cannot be reassigned." });
     }
+
+    const attendance = await Attendance.findOne({ cleaner: cleaner._id, date: campusDateKey(parts) });
+    if (!attendance?.checkIn || attendance.checkOut) {
+      return res.status(409).json({ success: false, message: "You can assign work only to a cleaner who has checked in and not checked out today." });
+    }
+
+    const activeAssignments = await Complaint.countDocuments({
+      assignedTo: cleaner._id,
+      status: { $nin: ["COMPLETED", "DUPLICATE"] },
+      _id: { $ne: complaint._id }
+    });
+    if (activeAssignments >= 5) {
+      return res.status(409).json({ success: false, message: "This cleaner already has 5 active assignments. Choose another checked-in cleaner." });
+    }
+
     complaint.assignedTo = cleaner._id;
     complaint.status = "ASSIGNED";
     await complaint.save();
     await complaint.populate("assignedTo", "firstName lastName username");
-    return res.status(200).json({ success: true, message: "Complaint assigned to cleaner.", complaint });
+    return res.status(200).json({ success: true, message: "Complaint assigned to checked-in cleaner.", complaint });
   } catch (error) {
     console.error("Assign complaint error:", error);
     return res.status(500).json({ success: false, message: "Unable to assign complaint." });
