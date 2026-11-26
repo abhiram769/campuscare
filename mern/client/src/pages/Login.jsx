@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { Home } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
@@ -41,6 +42,10 @@ const Login = () => {
   return (
     <div className="auth-page">
       <div className="auth-card">
+        <Link to="/" className="auth-home-button">
+  <Home size={16} />
+  <span>Home</span>
+</Link>
         <Link to="/" className="auth-brand">
           Campus Care
         </Link>

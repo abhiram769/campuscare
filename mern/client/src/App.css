@@ -347,3 +347,48 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+.recent-complaint-location {
+  margin: 0 0 8px;
+  color: var(--muted-color, #6b7280);
+  font-size: 0.9rem;
+}
+
+.recent-complaint-date {
+  display: block;
+  color: var(--muted-color, #6b7280);
+  font-size: 0.8rem;
+}
+
+@media (min-width: 700px) {
+  .recent-complaints-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+/* Home navigation button on authentication pages */
+.auth-home-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+  margin-bottom: 18px;
+  padding: 8px 12px;
+  border: 1px solid #dce8df;
+  border-radius: 8px;
+  color: var(--primary);
+  background: #f8fbf9;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.auth-home-button:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.auth-home-button:focus-visible {
+  outline: 2px solid #8fc6a1;
+  outline-offset: 2px;
+}
