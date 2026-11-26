@@ -56,7 +56,7 @@ exports.getTodayAttendance = async (req, res) => {
     const parts = campusDateParts();
     const isSunday = parts.weekday === "Sunday";
     const attendance = isSunday ? null : await Attendance.findOne({ cleaner: req.user._id, date: parts.year + "-" + parts.month + "-" + parts.day });
-    return res.json({ success: true, attendance, isWorkingDay: !isSunday, dutyStart: "08:00", dutyEnd: "17:00", graceMinutes: 0 });
+    return res.json({ success: true, attendance, isWorkingDay: !isSunday, dutyStart: "07:00", dutyEnd: "15:00", graceMinutes: 30 });
   } catch (error) {
     console.error("Attendance lookup error:", error);
     return res.status(500).json({ success: false, message: "Unable to load today's attendance." });
@@ -70,20 +70,20 @@ exports.checkIn = async (req, res) => {
     if (parts.weekday === "Sunday") return res.status(400).json({ success: false, message: "Sunday is not a scheduled working day." });
     const date = parts.year + "-" + parts.month + "-" + parts.day;
     const localClock = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" }).format(now);
-    if (localClock < "08:00:00") {
-      return res.status(400).json({ success: false, message: "Check-in opens at 8:00 AM. You cannot record attendance before duty starts." });
+    if (localClock < "07:00:00") {
+      return res.status(400).json({ success: false, message: "Check-in opens at 7:00 AM IST." });
     }
-    if (localClock > "17:00:00") {
-      return res.status(400).json({ success: false, message: "The 5:00 PM duty window has ended. Check-in is closed for today." });
+    if (localClock > "15:00:00") {
+      return res.status(400).json({ success: false, message: "The check-in window closed at 3:00 PM IST." });
     }
-    const isLate = localClock > "08:00:00";
+    const isLate = localClock > "07:30:00";
     const existing = await Attendance.findOne({ cleaner: req.user._id, date });
     if (existing?.checkIn) return res.status(409).json({ success: false, message: "You have already checked in today.", attendance: existing });
     const attendance = existing || new Attendance({ cleaner: req.user._id, date });
     attendance.checkIn = now;
     attendance.status = isLate ? "LATE" : "PRESENT";
     await attendance.save();
-    return res.status(200).json({ success: true, message: isLate ? "Checked in. Attendance marked late (no grace period)." : "Attendance marked present.", attendance });
+    return res.status(200).json({ success: true, message: isLate ? "Checked in. Attendance marked late." : "Attendance marked present.", attendance });
   } catch (error) {
     console.error("Attendance check-in error:", error);
     return res.status(500).json({ success: false, message: "Unable to record check-in." });
