@@ -14,7 +14,7 @@ function StatusPill({ status }) {
   return <span className={`complaint-status status-${String(status || "").toLowerCase()}`}>{statusLabels[status] || status}</span>;
 }
 
-function RequesterDashboard({ user }) {
+function RequesterDashboard({ user, logout, navigate }) {
   const [stats, setStats] = useState({ total: 0, open: 0, completed: 0 });
   const [complaints, setComplaints] = useState([]);
   const [form, setForm] = useState(emptyForm);
@@ -120,7 +120,7 @@ function RequesterDashboard({ user }) {
     <main className="dashboard-page">
       <header className="dashboard-topbar">
         <Link className="dashboard-brand" to="/"><span className="dashboard-brand-mark">C</span> Campus Care</Link>
-        <div className="dashboard-user"><span className="user-avatar">{user?.firstName?.[0] || "U"}</span><span><strong>{user?.firstName} {user?.lastName || ""}</strong><small>{user?.role === "FACULTY" ? "Faculty account" : "Student account"}</small></span></div>
+        <div className="dashboard-user"><span className="user-avatar">{user?.firstName?.[0] || "U"}</span><span><strong>{user?.firstName} {user?.lastName || ""}</strong><small>{user?.role === "FACULTY" ? "Faculty account" : "Student account"}</small></span><button type="button" className="refresh-button" onClick={() => { logout(); navigate("/login"); }}>Log out</button></div>
       </header>
       <div className="dashboard-container">
         <section className="dashboard-welcome">
@@ -190,6 +190,8 @@ function AdminDashboard({ user, logout, navigate }) {
   const [busyId, setBusyId] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [cleanerForm, setCleanerForm] = useState({ username: "", firstName: "", lastName: "", email: "", password: "", department: "", phone: "" });
+  const [creatingCleaner, setCreatingCleaner] = useState(false);
 
   const loadAdminData = useCallback(async () => {
     setLoading(true);
@@ -209,6 +211,21 @@ function AdminDashboard({ user, logout, navigate }) {
   }, []);
 
   useEffect(() => { loadAdminData(); }, [loadAdminData]);
+
+  const createCleaner = async (event) => {
+    event.preventDefault();
+    setCreatingCleaner(true); setError(""); setNotice("");
+    try {
+      const response = await api.post("/admin/users", { ...cleanerForm, role: "CLEANER" });
+      setNotice(response.data.message || "Cleaner account created successfully.");
+      setCleanerForm({ username: "", firstName: "", lastName: "", email: "", password: "", department: "", phone: "" });
+      await loadAdminData();
+    } catch (err) {
+      setError(err.response?.data?.message || "Unable to create cleaner account.");
+    } finally {
+      setCreatingCleaner(false);
+    }
+  };
 
   const reviewDuplicate = async (complaintId, decision) => {
     setBusyId(complaintId); setError(""); setNotice("");
@@ -248,6 +265,20 @@ function AdminDashboard({ user, logout, navigate }) {
           <article className="stat-card"><span className="stat-icon">!</span><div><small>Pending duplicate review</small><strong>{pending.length}</strong></div></article>
           <article className="stat-card"><span className="stat-icon stat-open">▤</span><div><small>Awaiting assignment</small><strong>{assignable.filter((item) => !item.assignedTo).length}</strong></div></article>
           <article className="stat-card"><span className="stat-icon stat-done">✓</span><div><small>Active cleaners</small><strong>{cleaners.length}</strong></div></article>
+        </section>
+        <section className="dashboard-panel admin-queue-panel">
+          <div className="panel-heading"><div><span className="dashboard-eyebrow">STAFF MANAGEMENT</span><h2>Create cleaner account</h2><p>Create login credentials for a cleaning staff member. Share the username and temporary password with them securely.</p></div></div>
+          <form className="cleaner-create-form" onSubmit={createCleaner}>
+            <label>Username<input required minLength="3" maxLength="30" value={cleanerForm.username} onChange={(event) => setCleanerForm((current) => ({ ...current, username: event.target.value }))} placeholder="e.g. cleaner01" /></label>
+            <label>First name<input required value={cleanerForm.firstName} onChange={(event) => setCleanerForm((current) => ({ ...current, firstName: event.target.value }))} placeholder="First name" /></label>
+            <label>Last name<input value={cleanerForm.lastName} onChange={(event) => setCleanerForm((current) => ({ ...current, lastName: event.target.value }))} placeholder="Last name (optional)" /></label>
+            <label>Email<input required type="email" value={cleanerForm.email} onChange={(event) => setCleanerForm((current) => ({ ...current, email: event.target.value }))} placeholder="cleaner@campus.edu" /></label>
+            <label>Temporary password<input required type="password" minLength="8" value={cleanerForm.password} onChange={(event) => setCleanerForm((current) => ({ ...current, password: event.target.value }))} placeholder="At least 8 characters" /></label>
+            <label>Department<input value={cleanerForm.department} onChange={(event) => setCleanerForm((current) => ({ ...current, department: event.target.value }))} placeholder="e.g. Facilities" /></label>
+            <label>Phone<input value={cleanerForm.phone} onChange={(event) => setCleanerForm((current) => ({ ...current, phone: event.target.value }))} placeholder="Optional contact number" /></label>
+            <button type="submit" className="dashboard-submit" disabled={creatingCleaner}>{creatingCleaner ? "Creating account..." : "Create cleaner account"}</button>
+          </form>
+          <div className="cleaner-directory"><strong>Active cleaner accounts ({cleaners.length})</strong>{cleaners.length === 0 ? <p>No active cleaners yet.</p> : <ul>{cleaners.map((cleaner) => <li key={cleaner._id}>{cleaner.firstName} {cleaner.lastName || ""} <span>@{cleaner.username}</span></li>)}</ul>}</div>
         </section>
         <section className="dashboard-panel admin-queue-panel">
           <div className="panel-heading reports-heading"><div><span className="dashboard-eyebrow">REQUIRES YOUR DECISION</span><h2>Suspected duplicate reports</h2><p>Compare the new report with the reports that triggered the image similarity warning.</p></div><button type="button" className="refresh-button" onClick={loadAdminData} disabled={loading}>↻ Refresh</button></div>
@@ -321,7 +352,7 @@ function StaffDashboard({ user, logout, navigate }) {
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  if (user?.role === "STUDENT" || user?.role === "FACULTY") return <RequesterDashboard user={user} />;
+  if (user?.role === "STUDENT" || user?.role === "FACULTY") return <RequesterDashboard user={user} logout={logout} navigate={navigate} />;
   if (user?.role === "ADMIN") return <AdminDashboard user={user} logout={logout} navigate={navigate} />;
   if (user?.role === "CLEANER") return <CleanerDashboard user={user} logout={logout} navigate={navigate} />;
   return <StaffDashboard user={user} logout={logout} navigate={navigate} />;
