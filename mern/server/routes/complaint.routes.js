@@ -1,12 +1,13 @@
 const router = require("express").Router();
 const { protect, authorize } = require("../middleware/auth.middleware");
 const uploadComplaintImages = require("../middleware/complaintUpload.middleware");
+const notifyAfter = require("../middleware/notificationHooks");
 const { createComplaint, getMyComplaints, getComplaintStats, getComplaintById } = require("../controllers/complaint.controller");
 const { checkDuplicateImages } = require("../controllers/duplicate.controller");
 router.use(protect, authorize("STUDENT", "FACULTY"));
 router.get("/stats", getComplaintStats);
 router.get("/mine", getMyComplaints);
 router.post("/duplicates/check", uploadComplaintImages, checkDuplicateImages);
-router.post("/", uploadComplaintImages, createComplaint);
+router.post("/", uploadComplaintImages, notifyAfter("created", createComplaint));
 router.get("/:id", getComplaintById);
 module.exports = router;
