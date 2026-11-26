@@ -2,7 +2,8 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
-const ROLL_NUMBER_REGEX = /^m260\d{5}$/;
+const ROLL_NUMBER_REGEX = /^m260\d{3}cs$/i;
+const LAST_NAME_REGEX = /^[a-z]+$/i;
 
 const publicUser = (user) => ({
   id: user._id,
@@ -43,11 +44,10 @@ exports.register = async (req, res, next) => {
       phone
     } = req.body;
 
-    // Required field validation
-    if (!username || !firstName || !email || !password) {
+    if (!username || !firstName || !lastName || !email || !password) {
       return res.status(400).json({
         success: false,
-        message: "Username, first name, email and password are required."
+        message: "Username, first name, last name, email and password are required."
       });
     }
 
@@ -55,25 +55,35 @@ exports.register = async (req, res, next) => {
     const normalizedUsername = String(username).trim().toLowerCase();
     const normalizedEmail = String(email).trim().toLowerCase();
     const normalizedFirstName = String(firstName).trim();
+    const normalizedLastName = String(lastName).trim().toLowerCase();
 
     // Public registration only allows Student and Faculty
     const safeRole = role === "FACULTY" ? "FACULTY" : "STUDENT";
 
-    // Validate NITC roll number
+    // Validate NITC username
     if (!ROLL_NUMBER_REGEX.test(normalizedUsername)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid username. Use your NITC roll number (example: m26012345)."
+        message: "Invalid username. Use the format m260587cs (m260 + 3 digits + cs)."
       });
     }
 
-    // Validate email matches roll number
-    const expectedEmail = `${normalizedUsername}@nitc.ac.in`;
+    // Validate last name
+    if (!LAST_NAME_REGEX.test(normalizedLastName)) {
+      return res.status(400).json({
+        success: false,
+        message: "Last name is required and must contain letters only."
+      });
+    }
+
+    // Validate email against last name and username
+    const expectedEmail =
+      `${normalizedLastName}_${normalizedUsername}@nitc.ac.in`;
 
     if (normalizedEmail !== expectedEmail) {
       return res.status(400).json({
         success: false,
-        message: "Use your NITC institutional email matching your roll number (example: m26012345@nitc.ac.in)."
+        message: `Use your NITC institutional email in this format: ${expectedEmail}`
       });
     }
 
@@ -111,7 +121,7 @@ exports.register = async (req, res, next) => {
     const user = await User.create({
       username: normalizedUsername,
       firstName: normalizedFirstName,
-      lastName: lastName || "",
+      lastName: normalizedLastName,
       email: normalizedEmail,
       password,
       role: safeRole,
@@ -127,7 +137,6 @@ exports.register = async (req, res, next) => {
     });
 
   } catch (error) {
-    // Handle duplicate key errors (including simultaneous registrations)
     if (error.code === 11000) {
       return res.status(409).json({
         success: false,

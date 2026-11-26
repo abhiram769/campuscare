@@ -2,7 +2,12 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
-const ROLL_NUMBER_REGEX = /^m260\d{5}$/i;
+const ROLL_NUMBER_REGEX = /^m260\d{3}cs$/i;
+const LAST_NAME_REGEX = /^[a-z]+$/i;
+
+const isPublicRole = function () {
+  return ["STUDENT", "FACULTY"].includes(this.role);
+};
 
 const userSchema = new mongoose.Schema(
   {
@@ -14,13 +19,12 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       validate: {
         validator: function (value) {
-          // Roll-number validation for student and faculty accounts.
-          if (["STUDENT", "FACULTY"].includes(this.role)) {
+          if (isPublicRole.call(this)) {
             return ROLL_NUMBER_REGEX.test(value);
           }
           return true;
         },
-        message: "Username must be a valid NITC roll number (example: m26012345).",
+        message: "Username must follow the format m260587cs (m260 + 3 digits + cs).",
       },
     },
 
@@ -32,8 +36,20 @@ const userSchema = new mongoose.Schema(
 
     lastName: {
       type: String,
-      default: "",
       trim: true,
+      lowercase: true,
+      required: function () {
+        return isPublicRole.call(this);
+      },
+      validate: {
+        validator: function (value) {
+          if (isPublicRole.call(this)) {
+            return LAST_NAME_REGEX.test(value || "");
+          }
+          return true;
+        },
+        message: "Last name is required and must contain letters only.",
+      },
     },
 
     email: {
@@ -44,13 +60,20 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       validate: {
         validator: function (value) {
-          if (["STUDENT", "FACULTY"].includes(this.role)) {
+          if (isPublicRole.call(this)) {
             const username = this.username?.trim().toLowerCase();
-            return value === `${username}@nitc.ac.in`;
+            const lastName = this.lastName?.trim().toLowerCase();
+
+            if (!username || !LAST_NAME_REGEX.test(lastName || "")) {
+              return false;
+            }
+
+            return value ===
+              `${lastName}_${username}@nitc.ac.in`;
           }
           return true;
         },
-        message: "Use your NITC email matching your roll number (example: m26012345@nitc.ac.in).",
+        message: "Use your NITC email in the format lastname_username@nitc.ac.in.",
       },
     },
 
