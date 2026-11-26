@@ -249,3 +249,42 @@
 .cleaner-directory li { padding: 7px 10px; border: 1px solid #e2ebe5; border-radius: 7px; background: #f8fbf9; }
 .cleaner-directory li span { color: var(--muted); }
 @media (max-width: 600px) { .cleaner-create-form { grid-template-columns: 1fr; } .cleaner-create-form .dashboard-submit { grid-column: auto; } }
+
+/* Cleaner attendance and task completion evidence */
+.attendance-panel { margin-bottom: 22px; }
+.attendance-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.attendance-summary span { display: grid; gap: 5px; padding: 12px; border: 1px solid #e2ebe5; border-radius: 8px; color: #53665a; background: #f8fbf9; font-size: 12px; }
+.attendance-summary strong { color: #176b45; font-size: 11px; }
+.attendance-action { width: auto; padding: 0 18px; }
+.task-evidence-upload { display: grid; gap: 9px; margin-top: 14px; padding: 13px; border: 1px dashed #b9d2c0; border-radius: 9px; background: #f8fbf9; }
+.task-evidence-upload label { display: grid; gap: 6px; color: #34483d; font-size: 12px; font-weight: 700; }
+.task-evidence-upload label span { color: var(--muted); font-size: 10px; font-weight: 400; }
+.task-evidence-upload input { width: 100%; font: inherit; font-size: 12px; }
+.task-evidence-upload .dashboard-submit { width: 100%; margin: 0; }
+.task-evidence-upload > small { color: var(--primary); font-size: 11px; }
+.completion-evidence-grid { margin-top: 8px; }
+@media (max-width: 650px) { .attendance-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+
+/* Role-based dashboard analytics */
+.analytics-section { margin: 28px 0; }
+.analytics-section-heading { margin-bottom: 16px; }
+.analytics-section-heading h2 { margin: 5px 0 6px; color: #172b25; }
+.analytics-section-heading p, .analytics-chart-heading p { margin: 0; color: #718078; font-size: .9rem; }
+.analytics-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.analytics-chart-card { min-width: 0; padding: 20px; border: 1px solid #e2ebe5; border-radius: 16px; background: #fff; box-shadow: 0 5px 18px rgba(23, 67, 46, .045); }
+.analytics-chart-heading h3 { margin: 0 0 5px; color: #172b25; font-size: 1rem; }
+.analytics-chart-body { width: 100%; height: 250px; margin-top: 14px; }
+.analytics-empty { display: grid; place-items: center; min-height: 130px; padding: 20px; border: 1px dashed #cbdacf; border-radius: 12px; color: #718078; text-align: center; background: #f7faf8; }
+.attendance-chart-summary { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 10px; height: 100%; color: #176b45; }
+.attendance-chart-summary strong { font-size: 2rem; }
+.attendance-chart-summary span { color: #718078; font-size: .9rem; }
+@media (max-width: 760px) { .analytics-grid { grid-template-columns: 1fr; } .analytics-chart-body { height: 230px; } }
+
+/* Cleaner completed work history */
+.cleaner-history-panel { margin-top: 24px; }
+.cleaner-completed-task { align-items: flex-start; }
+.cleaner-completed-task-main { display: grid; gap: 8px; width: 100%; min-width: 0; }
+.cleaner-completed-task-main > strong { color: #172b25; font-size: 1rem; }
+.cleaner-completed-task-main > small { color: #718078; }
+.cleaner-completed-task-main > p { margin: 0; color: #53665a; }
