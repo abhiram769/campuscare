@@ -20,6 +20,8 @@ function RequesterDashboard({ user }) {
   const [form, setForm] = useState(emptyForm);
   const [imageFiles, setImageFiles] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
+  const [duplicateMatches, setDuplicateMatches] = useState([]);
+  const [confirmDuplicate, setConfirmDuplicate] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -68,7 +70,7 @@ function RequesterDashboard({ user }) {
     if (chosen.length > 5) { setError("Please select no more than 5 images."); event.target.value = ""; return; }
     if (chosen.some((file) => file.size > 5 * 1024 * 1024)) { setError("Each image must be 5 MB or smaller."); event.target.value = ""; return; }
     if (chosen.some((file) => !["image/jpeg", "image/png", "image/webp"].includes(file.type))) { setError("Only JPG, PNG and WEBP images are supported."); event.target.value = ""; return; }
-    setError(""); setImageFiles(chosen);
+    setError(""); setImageFiles(chosen); setDuplicateMatches([]); setConfirmDuplicate(false);
   };
 
   const submitComplaint = async (event) => {
@@ -77,13 +79,34 @@ function RequesterDashboard({ user }) {
     setError("");
     setNotice("");
     try {
+      if (imageFiles.length > 0 && !confirmDuplicate) {
+        const checkPayload = new FormData();
+        if (form.latitude && form.longitude) {
+          checkPayload.append("latitude", form.latitude);
+          checkPayload.append("longitude", form.longitude);
+        }
+        imageFiles.forEach((file) => checkPayload.append("images", file));
+        const duplicateResponse = await api.post("/complaints/duplicates/check", checkPayload, { headers: { "Content-Type": "multipart/form-data" } });
+        const matches = duplicateResponse.data.matches || [];
+        if (matches.length > 0) {
+          setDuplicateMatches(matches);
+          setConfirmDuplicate(true);
+          setNotice("We found reports that may show the same issue. Review them before deciding whether to continue.");
+          setSubmitting(false);
+          return;
+        }
+      }
+
       const payload = new FormData();
       Object.entries(form).forEach(([key, value]) => { if (value !== "") payload.append(key, value); });
       imageFiles.forEach((file) => payload.append("images", file));
+      if (confirmDuplicate && duplicateMatches.length) payload.append("suspectedDuplicateIds", JSON.stringify(duplicateMatches.map((match) => match.complaintId)));
       await api.post("/complaints", payload, { headers: { "Content-Type": "multipart/form-data" } });
       setForm(emptyForm);
       setImageFiles([]);
       setImagePreviews([]);
+      setDuplicateMatches([]);
+      setConfirmDuplicate(false);
       setNotice("Your complaint has been submitted successfully.");
       await loadDashboard();
     } catch (err) {
@@ -135,7 +158,15 @@ function RequesterDashboard({ user }) {
                 <input className="image-file-input" type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={chooseImages} />
               </label>
               {imagePreviews.length > 0 && <div className="image-preview-grid">{imagePreviews.map((src, index) => <div className="image-preview-item" key={src}><img src={src} alt={imageFiles[index]?.name || "Complaint preview"} /><button type="button" aria-label="Remove image" onClick={() => setImageFiles((current) => current.filter((_, itemIndex) => itemIndex !== index))}>×</button></div>)}</div>}
-              <button className="dashboard-submit" type="submit" disabled={submitting}>{submitting ? "Submitting..." : "Submit complaint →"}</button>
+              {duplicateMatches.length > 0 && <div className="duplicate-warning" role="alert">
+                <strong>Possible duplicate reports found</strong>
+                <p>These recent reports are nearby and contain visually similar photos. Please check them before submitting again.</p>
+                {duplicateMatches.map((match) => <div className="duplicate-match" key={match.complaintId}>
+                  <span><b>{match.title}</b><small>{match.location} · {match.distanceMeters == null ? "GPS distance not checked" : `${match.distanceMeters} m away`} · {match.similarity}% image similarity</small></span>
+                </div>)}
+                <button type="button" className="duplicate-cancel" onClick={() => { setDuplicateMatches([]); setConfirmDuplicate(false); setNotice(""); }}>Review my report</button>
+              </div>}
+              <button className="dashboard-submit" type="submit" disabled={submitting}>{submitting ? "Checking and submitting..." : confirmDuplicate ? "Submit anyway →" : "Submit complaint →"}</button>
             </form>
           </section>
 
