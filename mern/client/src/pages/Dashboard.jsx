@@ -140,6 +140,64 @@ function RequesterDashboard({ user, logout, navigate }) {
           <p className="map-footnote">Only complaints with saved GPS coordinates appear as markers. Building detail depends on available OpenStreetMap data.</p>
         </section>
 
+        {user?.role === "STUDENT" && (
+          <section className="dashboard-panel recent-complaints-panel">
+          <div className="panel-heading reports-heading">
+            <div>
+              <span className="dashboard-eyebrow">YOUR ACTIVITY</span>
+              <h2>Recent Complaints</h2>
+              <p>Track the latest campus issues you have reported.</p>
+            </div>
+            <button
+              type="button"
+              className="refresh-button"
+              onClick={loadDashboard}
+              disabled={loading}
+            >
+              {loading ? "Refreshing..." : "↻ Refresh"}
+            </button>
+          </div>
+
+          {loading ? (
+            <div className="empty-state">Loading your recent complaints...</div>
+          ) : complaints.length === 0 ? (
+            <div className="empty-state">
+              <strong>No complaints yet</strong>
+              <p>Your submitted complaints will appear here.</p>
+            </div>
+          ) : (
+            <div className="recent-complaints-list">
+              {complaints.slice(0, 5).map((complaint) => (
+                <article className="recent-complaint-card" key={complaint._id}>
+                  <div className="complaint-item-top">
+                    <span className="complaint-category">
+                      {String(complaint.category || "OTHER").replaceAll("_", " ")}
+                    </span>
+                    <StatusPill status={complaint.status} />
+                  </div>
+
+                  <h3>{complaint.title || "Untitled complaint"}</h3>
+                  <p className="recent-complaint-location">
+                    {complaint.location || "Location not provided"}
+                  </p>
+
+                  <small className="recent-complaint-date">
+                    Submitted{" "}
+                    {complaint.createdAt
+                      ? new Date(complaint.createdAt).toLocaleDateString("en-IN", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric"
+                        })
+                      : "Date unavailable"}
+                  </small>
+                </article>
+              ))}
+            </div>
+          )}
+          </section>
+        )}
+
         <div className="dashboard-content-grid">
           <section className="dashboard-panel">
             <div className="panel-heading"><div><span className="dashboard-eyebrow">NEW REQUEST</span><h2>Report a campus issue</h2><p>Share the details so the campus team can take action.</p></div></div>
