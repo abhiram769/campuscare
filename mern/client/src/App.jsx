@@ -4,6 +4,7 @@ import { ArrowRight, Bell, Camera, CheckCircle2, ClipboardCheck, Leaf, MapPin, M
 import { Link, Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import NotificationCenter from "./components/NotificationCenter";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
@@ -71,18 +72,21 @@ function App() {
   const { user, loading } = useAuth();
   if (loading) return <div className="auth-loading">Loading Campus Care...</div>;
   return (
-    <Routes>
-      <Route path="/" element={user ? <Navigate to={user.role === "ADMIN" ? "/admin/dashboard" : user.role === "CLEANER" ? "/cleaner/dashboard" : user.role === "FACULTY" ? "/faculty/dashboard" : "/student/dashboard"} replace /> : <LandingPage />} />
-      <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
-      <Route path="/register" element={user ? <Navigate to="/" replace /> : <Register />} />
-      <Route path="/register/student" element={<Navigate to="/register" replace />} />
-      <Route path="/register/faculty" element={<Navigate to="/register" replace />} />
-      <Route path="/student/dashboard" element={<RoleDashboard role="STUDENT" />} />
-      <Route path="/faculty/dashboard" element={<RoleDashboard role="FACULTY" />} />
-      <Route path="/cleaner/dashboard" element={<RoleDashboard role="CLEANER" />} />
-      <Route path="/admin/dashboard" element={<RoleDashboard role="ADMIN" />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/" element={user ? <Navigate to={user.role === "ADMIN" ? "/admin/dashboard" : user.role === "CLEANER" ? "/cleaner/dashboard" : user.role === "FACULTY" ? "/faculty/dashboard" : "/student/dashboard"} replace /> : <LandingPage />} />
+        <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
+        <Route path="/register" element={user ? <Navigate to="/" replace /> : <Register />} />
+        <Route path="/register/student" element={<Navigate to="/register" replace />} />
+        <Route path="/register/faculty" element={<Navigate to="/register" replace />} />
+        <Route path="/student/dashboard" element={<RoleDashboard role="STUDENT" />} />
+        <Route path="/faculty/dashboard" element={<RoleDashboard role="FACULTY" />} />
+        <Route path="/cleaner/dashboard" element={<RoleDashboard role="CLEANER" />} />
+        <Route path="/admin/dashboard" element={<RoleDashboard role="ADMIN" />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      <NotificationCenter />
+    </>
   );
 }
 export default App;

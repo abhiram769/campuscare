@@ -1,4 +1,3 @@
-
 const express = require("express");
 
 const {
@@ -11,10 +10,8 @@ const {
   assignComplaint,
 } = require("../controllers/admin.controller");
 
-const {
-  protect,
-  authorize,
-} = require("../middleware/auth.middleware");
+const { protect, authorize } = require("../middleware/auth.middleware");
+const notifyAfter = require("../middleware/notificationHooks");
 
 const router = express.Router();
 
@@ -25,7 +22,7 @@ router.use(protect, authorize("ADMIN"));
 router.get("/complaints", getComplaintsForAdmin);
 router.get("/cleaners", getActiveCleaners);
 router.patch("/complaints/:id/duplicate-review", reviewDuplicate);
-router.patch("/complaints/:id/assign", assignComplaint);
+router.patch("/complaints/:id/assign", notifyAfter("assigned", assignComplaint));
 
 // Create Cleaner or additional Admin
 router.post("/users", createUser);

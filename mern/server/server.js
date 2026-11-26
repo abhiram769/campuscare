@@ -4,6 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
+const http = require("http");
 
 const connectDB = require("./config/db");
 const healthRoutes = require("./routes/health.routes");
@@ -11,9 +12,12 @@ const authRoutes = require("./routes/auth.routes");
 const complaintRoutes = require("./routes/complaint.routes");
 const adminRoutes = require("./routes/admin.routes");
 const staffRoutes = require("./routes/staff.routes");
+const notificationRoutes = require("./routes/notification.routes");
+const attachSocket = require("./socket");
 const { notFound, errorHandler } = require("./middleware/error.middleware");
 
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
@@ -29,6 +33,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/complaints", complaintRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/staff", staffRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
@@ -36,7 +41,8 @@ app.use(errorHandler);
 async function startServer() {
   try {
     await connectDB();
-    app.listen(PORT, () => console.log(`Campus Care API listening at http://localhost:${PORT}`));
+    attachSocket(server);
+    server.listen(PORT, () => console.log(`Campus Care API listening at http://localhost:${PORT}`));
   } catch (error) {
     console.error("Server startup failed:", error.message);
     process.exit(1);
