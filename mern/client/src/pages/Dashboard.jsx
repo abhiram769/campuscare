@@ -248,6 +248,12 @@ function AdminDashboard({ user, logout, navigate }) {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [cleanerForm, setCleanerForm] = useState({ username: "", firstName: "", lastName: "", email: "", password: "", department: "", phone: "" });
+  const [showUserManagement, setShowUserManagement] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [usersLoaded, setUsersLoaded] = useState(false);
+  const [userSearch, setUserSearch] = useState("");
+  const [selectedUser, setSelectedUser] = useState(null);
   const [creatingCleaner, setCreatingCleaner] = useState(false);
   const [currentTime, setCurrentTime] = useState(() => new Date());
 
@@ -273,6 +279,33 @@ function AdminDashboard({ user, logout, navigate }) {
     const timer = setInterval(() => setCurrentTime(new Date()), 30000);
     return () => clearInterval(timer);
   }, []);
+
+  const loadUsers = async () => {
+    setUsersLoading(true);
+    setError("");
+    try {
+      const response = await api.get("/admin/users");
+      const people = (response.data.users || []).filter((person) =>
+        person.role === "STUDENT" || person.role === "FACULTY"
+      );
+      setUsers(people);
+      setSelectedUser((current) => {
+        if (!current) return people[0] || null;
+        return people.find((person) => String(person.id || person._id) === String(current.id || current._id)) || people[0] || null;
+      });
+      setUsersLoaded(true);
+    } catch (err) {
+      setError(err.response?.data?.message || "Unable to load student and faculty accounts.");
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
+  const toggleUserManagement = async () => {
+    const nextState = !showUserManagement;
+    setShowUserManagement(nextState);
+    if (nextState && !usersLoaded) await loadUsers();
+  };
 
   const createCleaner = async (event) => {
     event.preventDefault();
@@ -323,6 +356,25 @@ function AdminDashboard({ user, logout, navigate }) {
   }).format(currentTime);
   const assignmentWindowOpen = adminClock < "17:00:00";
 
+  const normalizedUserSearch = userSearch.trim().toLowerCase();
+  const filteredUsers = users.filter((person) => {
+    const fullName = `${person.firstName || ""} ${person.lastName || ""}`.toLowerCase();
+    return !normalizedUserSearch ||
+      fullName.includes(normalizedUserSearch) ||
+      (person.username || "").toLowerCase().includes(normalizedUserSearch) ||
+      (person.email || "").toLowerCase().includes(normalizedUserSearch) ||
+      (person.department || "").toLowerCase().includes(normalizedUserSearch);
+  });
+  const selectedUserId = selectedUser?.id || selectedUser?._id;
+  const selectedUserComplaints = selectedUser
+    ? complaints
+        .filter((complaint) => {
+          const reporterId = complaint.reporter?._id || complaint.reporter?.id || complaint.reporter;
+          return String(reporterId || "") === String(selectedUserId || "");
+        })
+        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+    : [];
+
   return (
     <main className="dashboard-page">
       <header className="dashboard-topbar"><Link className="dashboard-brand" to="/"><span className="dashboard-brand-mark">C</span> Campus Care</Link><div className="dashboard-user"><span><strong>{user?.firstName} {user?.lastName || ""}</strong><small>Administrator</small></span><button className="refresh-button" onClick={() => { logout(); navigate("/login"); }}>Log out</button></div></header>
@@ -336,6 +388,129 @@ function AdminDashboard({ user, logout, navigate }) {
           <article className="stat-card"><span className="stat-icon stat-done">●</span><div><small>Online cleaners</small><strong>{onlineCleaners.length}</strong></div></article>
           <article className="stat-card"><span className="stat-icon">▣</span><div><small>Active cleaner accounts</small><strong>{cleaners.length}</strong></div></article>
         </section>
+        <section className="admin-user-management">
+          <div className="admin-user-management-heading">
+            <div>
+              <span className="dashboard-eyebrow">CAMPUS DIRECTORY</span>
+              <h2>Student &amp; Faculty Management</h2>
+              <p>Find a student or faculty member and open their profile to review all complaints they have submitted.</p>
+            </div>
+            <button type="button" className="dashboard-submit user-management-toggle" onClick={toggleUserManagement}>
+              {showUserManagement ? "Close user management" : "View students & faculty"}
+            </button>
+          </div>
+          {showUserManagement && (
+            <div className="user-management-content">
+              <div className="user-management-toolbar">
+                <div className="user-counts">
+                  <span><strong>{users.filter((person) => person.role === "STUDENT").length}</strong> Students</span>
+                  <span><strong>{users.filter((person) => person.role === "FACULTY").length}</strong> Faculty</span>
+                </div>
+                <div className="user-management-actions">
+                  <input
+                    className="user-search-input"
+                    type="search"
+                    value={userSearch}
+                    onChange={(event) => setUserSearch(event.target.value)}
+                    placeholder="Search name, username, email or department..."
+                    aria-label="Search students and faculty"
+                  />
+                  <button type="button" className="refresh-button" onClick={loadUsers} disabled={usersLoading}>
+                    {usersLoading ? "Loading..." : "↻ Refresh"}
+                  </button>
+                </div>
+              </div>
+              {usersLoading && users.length === 0 ? (
+                <div className="empty-state">Loading student and faculty accounts...</div>
+              ) : users.length === 0 ? (
+                <div className="empty-state"><strong>No student or faculty accounts found</strong><p>Registered student and faculty accounts will appear here.</p></div>
+              ) : (
+                <div className="user-management-grid">
+                  <aside className="user-directory-list" aria-label="Students and faculty">
+                    {filteredUsers.length === 0 ? (
+                      <div className="user-directory-empty">No matching accounts.</div>
+                    ) : filteredUsers.map((person) => {
+                      const personId = person.id || person._id;
+                      const isSelected = String(personId) === String(selectedUserId);
+                      return (
+                        <button
+                          type="button"
+                          key={personId}
+                          className={`user-directory-entry${isSelected ? " selected" : ""}`}
+                          onClick={() => setSelectedUser(person)}
+                        >
+                          <span className="user-directory-avatar">{(person.firstName || person.username || "U").charAt(0).toUpperCase()}</span>
+                          <span className="user-directory-copy">
+                            <strong>{person.firstName} {person.lastName || ""}</strong>
+                            <small>@{person.username} · {person.role === "FACULTY" ? "Faculty" : "Student"}</small>
+                            <small>{person.email}</small>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </aside>
+                  <section className="user-profile-panel">
+                    {!selectedUser ? (
+                      <div className="empty-state">Select a person to view their profile.</div>
+                    ) : (
+                      <>
+                        <div className="user-profile-header">
+                          <span className="user-profile-avatar">{(selectedUser.firstName || selectedUser.username || "U").charAt(0).toUpperCase()}</span>
+                          <div>
+                            <span className="dashboard-eyebrow">{selectedUser.role === "FACULTY" ? "FACULTY PROFILE" : "STUDENT PROFILE"}</span>
+                            <h3>{selectedUser.firstName} {selectedUser.lastName || ""}</h3>
+                            <p>@{selectedUser.username} · {selectedUser.isActive ? "Active account" : "Disabled account"}</p>
+                          </div>
+                        </div>
+                        <dl className="user-profile-details">
+                          <div><dt>Email</dt><dd>{selectedUser.email || "Not provided"}</dd></div>
+                          <div><dt>Department</dt><dd>{selectedUser.department || "Not provided"}</dd></div>
+                          <div><dt>Phone</dt><dd>{selectedUser.phone || "Not provided"}</dd></div>
+                          <div><dt>Registered</dt><dd>{selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "Not available"}</dd></div>
+                        </dl>
+                        <div className="user-history-heading">
+                          <div><span className="dashboard-eyebrow">REPORTING ACTIVITY</span><h4>Complaint history <span>{selectedUserComplaints.length}</span></h4></div>
+                        </div>
+                        {selectedUserComplaints.length === 0 ? (
+                          <div className="empty-state user-history-empty">This user has not submitted any complaints yet.</div>
+                        ) : (
+                          <div className="user-complaint-history">
+                            {selectedUserComplaints.map((complaint) => (
+                              <article className="user-history-card" key={complaint._id}>
+                                <div className="complaint-item-top">
+                                  <span className="complaint-category">{String(complaint.category || "OTHER").replaceAll("_", " ")}</span>
+                                  <StatusPill status={complaint.status} />
+                                </div>
+                                <h5>{complaint.title || "Untitled complaint"}</h5>
+                                <p>{complaint.description || "No description provided."}</p>
+                                <div className="user-history-meta">
+                                  <span>⌖ {complaint.location || "Location not provided"}</span>
+                                  <span>Submitted {complaint.createdAt ? new Date(complaint.createdAt).toLocaleString("en-IN") : "Date unavailable"}</span>
+                                  {complaint.assignedTo && <span>Assigned to {complaint.assignedTo.firstName} {complaint.assignedTo.lastName || ""}</span>}
+                                  {complaint.resolvedAt && <span>Resolved {new Date(complaint.resolvedAt).toLocaleString("en-IN")}</span>}
+                                </div>
+                                {(complaint.images || []).length > 0 && (
+                                  <div className="user-history-images">
+                                    {complaint.images.map((src, index) => (
+                                      <a href={src} target="_blank" rel="noreferrer" key={src}>
+                                        <img src={src} alt={`Complaint attachment ${index + 1}`} />
+                                      </a>
+                                    ))}
+                                  </div>
+                                )}
+                              </article>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </section>
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+
         <section className="dashboard-panel admin-queue-panel">
           <div className="panel-heading"><div><span className="dashboard-eyebrow">STAFF MANAGEMENT</span><h2>Create cleaner account</h2><p>Create login credentials for a cleaning staff member. Share the username and temporary password with them securely.</p></div></div>
           <form className="cleaner-create-form" onSubmit={createCleaner}>
